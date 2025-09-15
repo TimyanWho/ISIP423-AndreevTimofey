@@ -68,10 +68,10 @@ void ShowStats()
         if (prices[i] < prices[idxMin]) idxMin = i;
     }
     System.Console.WriteLine();
-    System.Console.WriteLine($"Сумма: {sum:0.00} ₽");
-    System.Console.WriteLine($"Среднее: {avg:0.00} ₽");
-    System.Console.WriteLine($"Максимум: {prices[idxMax]:0.00} ₽ — {names[idxMax]}");
-    System.Console.WriteLine($"Минимум: {prices[idxMin]:0.00} ₽ — {names[idxMin]}");
+    System.Console.WriteLine($"Сумма: {sum:0.00} руб");
+    System.Console.WriteLine($"Среднее: {avg:0.00} руб");
+    System.Console.WriteLine($"Максимум: {prices[idxMax]:0.00} руб — {names[idxMax]}");
+    System.Console.WriteLine($"Минимум: {prices[idxMin]:0.00} руб — {names[idxMin]}");
 }
 
 void BubbleSort()
@@ -95,25 +95,30 @@ void BubbleSort()
 
 void ConvertCurrency()
 {
-    System.Console.Write("Введите курс (сколько рублей в 1 единице валюты), например 100.50: ");
-    string s = System.Console.ReadLine()?.Trim().Replace(',', '.') ?? "0";
-    if (!decimal.TryParse(s, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out decimal rate) || rate <= 0)
+    void ConvertCurrency()
     {
-        System.Console.WriteLine("Неверный курс.");
-        return;
+        System.Console.Write("Введите курс (сколько рублей за 1 доллар), например 100: ");
+        string s = System.Console.ReadLine()?.Trim().Replace(',', '.') ?? "0";
+        if (!decimal.TryParse(s, System.Globalization.NumberStyles.Number,
+                              System.Globalization.CultureInfo.InvariantCulture,
+                              out decimal rate) || rate <= 0)
+        {
+            System.Console.WriteLine("Неверный курс.");
+            return;
+        }
+
+        System.Console.WriteLine();
+        System.Console.WriteLine($"Конвертация в USD (курс {rate:0.##} руб = 1 USD):");
+        decimal totalUSD = 0;
+        for (int i = 0; i < n; i++)
+        {
+            decimal usd = System.Decimal.Round(prices[i] / rate, 2);
+            totalUSD += usd;
+            System.Console.WriteLine($"{i + 1}. {names[i]} — {prices[i]:0.00} руб = {usd:0.00} USD");
+        }
+        System.Console.WriteLine($"Итого: {Sum(prices):0.00} руб = {totalUSD:0.00} USD");
     }
-    System.Console.Write("Код валюты (например USD): ");
-    string code = (System.Console.ReadLine() ?? "CUR").Trim().ToUpper();
-    System.Console.WriteLine();
-    System.Console.WriteLine($"Конвертация в {code} (курс {rate:0.####} ₽ = 1 {code}):");
-    decimal totalConv = 0;
-    for (int i = 0; i < n; i++)
-    {
-        decimal conv = System.Decimal.Round(prices[i] / rate, 4);
-        totalConv += conv;
-        System.Console.WriteLine($"{i + 1}. {names[i]} — {prices[i]:0.00} ₽ = {conv:0.####} {code}");
-    }
-    System.Console.WriteLine($"Итого: {Sum(prices):0.00} ₽ = {totalConv:0.####} {code}");
+
 }
 
 
