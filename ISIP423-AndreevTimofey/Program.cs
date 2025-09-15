@@ -59,7 +59,19 @@ void PrintAll()
 
 void ShowStats()
 {
-
+    decimal sum = Sum(prices);
+    decimal avg = n > 0 ? System.Decimal.Round(sum / n, 2) : 0;
+    int idxMax = 0, idxMin = 0;
+    for (int i = 1; i < n; i++)
+    {
+        if (prices[i] > prices[idxMax]) idxMax = i;
+        if (prices[i] < prices[idxMin]) idxMin = i;
+    }
+    System.Console.WriteLine();
+    System.Console.WriteLine($"Сумма: {sum:0.00} ₽");
+    System.Console.WriteLine($"Среднее: {avg:0.00} ₽");
+    System.Console.WriteLine($"Максимум: {prices[idxMax]:0.00} ₽ — {names[idxMax]}");
+    System.Console.WriteLine($"Минимум: {prices[idxMin]:0.00} ₽ — {names[idxMin]}");
 }
 
 void BubbleSort()
