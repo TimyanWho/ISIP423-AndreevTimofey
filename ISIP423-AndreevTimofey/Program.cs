@@ -93,38 +93,47 @@ void BubbleSort()
     System.Console.WriteLine("Сортировка завершена (по возрастанию цены).");
 }
 
-void ConvertCurrency()
+void ConvertCurrency() 
 {
-    void ConvertCurrency()
+    System.Console.Write("Введите курс (сколько рублей за 1 доллар), например 100: ");
+    string s = System.Console.ReadLine()?.Trim().Replace(',', '.') ?? "0";
+    if (!decimal.TryParse(s, System.Globalization.NumberStyles.Number,
+                          System.Globalization.CultureInfo.InvariantCulture,
+                          out decimal rate) || rate <= 0)
     {
-        System.Console.Write("Введите курс (сколько рублей за 1 доллар), например 100: ");
-        string s = System.Console.ReadLine()?.Trim().Replace(',', '.') ?? "0";
-        if (!decimal.TryParse(s, System.Globalization.NumberStyles.Number,
-                              System.Globalization.CultureInfo.InvariantCulture,
-                              out decimal rate) || rate <= 0)
-        {
-            System.Console.WriteLine("Неверный курс.");
-            return;
-        }
-
-        System.Console.WriteLine();
-        System.Console.WriteLine($"Конвертация в USD (курс {rate:0.##} руб = 1 USD):");
-        decimal totalUSD = 0;
-        for (int i = 0; i < n; i++)
-        {
-            decimal usd = System.Decimal.Round(prices[i] / rate, 2);
-            totalUSD += usd;
-            System.Console.WriteLine($"{i + 1}. {names[i]} — {prices[i]:0.00} руб = {usd:0.00} USD");
-        }
-        System.Console.WriteLine($"Итого: {Sum(prices):0.00} руб = {totalUSD:0.00} USD");
+        System.Console.WriteLine("Неверный курс.");
+        return;
     }
+
+    System.Console.WriteLine();
+    System.Console.WriteLine($"Конвертация в USD (курс {rate:0.##} руб = 1 USD):");
+    decimal totalUSD = 0;
+    for (int i = 0; i < n; i++)
+    {
+        decimal usd = System.Decimal.Round(prices[i] / rate, 2);
+        totalUSD += usd;
+        System.Console.WriteLine($"{i + 1}. {names[i]} — {prices[i]:0.00} руб = {usd:0.00} USD");
+    }
+    System.Console.WriteLine($"Итого: {Sum(prices):0.00} руб = {totalUSD:0.00} USD");
 
 }
 
 
 void SearchByName()
 {
-
+    System.Console.Write("Введите текст для поиска: ");
+    string q = (System.Console.ReadLine() ?? "").Trim().ToLower();
+    if (string.IsNullOrEmpty(q)) { System.Console.WriteLine("Пустой запрос."); return; }
+    bool found = false;
+    for (int i = 0; i < n; i++)
+    {
+        if (names[i].ToLower().Contains(q))
+        {
+            System.Console.WriteLine($"{i + 1}. {names[i]} — {prices[i]:0.00} ₽");
+            found = true;
+        }
+    }
+    if (!found) System.Console.WriteLine("Ничего не найдено.");
 }
 
 while (true)
