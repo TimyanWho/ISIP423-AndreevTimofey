@@ -76,7 +76,21 @@ void ShowStats()
 
 void BubbleSort()
 {
-
+    for (int pass = 0; pass < n - 1; pass++)
+    {
+        bool any = false;
+        for (int i = 0; i < n - 1 - pass; i++)
+        {
+            if (prices[i] > prices[i + 1])
+            {
+                decimal tmpP = prices[i]; prices[i] = prices[i + 1]; prices[i + 1] = tmpP;
+                string tmpN = names[i]; names[i] = names[i + 1]; names[i + 1] = tmpN;
+                any = true;
+            }
+        }
+        if (!any) break;
+    }
+    System.Console.WriteLine("Сортировка завершена (по возрастанию цены).");
 }
 
 void ConvertCurrency()
