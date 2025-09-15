@@ -129,7 +129,7 @@ void SearchByName()
     {
         if (names[i].ToLower().Contains(q))
         {
-            System.Console.WriteLine($"{i + 1}. {names[i]} — {prices[i]:0.00} ₽");
+            System.Console.WriteLine($"{i + 1}. {names[i]} — {prices[i]:0.00} руб");
             found = true;
         }
     }
