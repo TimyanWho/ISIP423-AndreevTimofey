@@ -95,7 +95,25 @@ void BubbleSort()
 
 void ConvertCurrency()
 {
-
+    System.Console.Write("Введите курс (сколько рублей в 1 единице валюты), например 100.50: ");
+    string s = System.Console.ReadLine()?.Trim().Replace(',', '.') ?? "0";
+    if (!decimal.TryParse(s, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out decimal rate) || rate <= 0)
+    {
+        System.Console.WriteLine("Неверный курс.");
+        return;
+    }
+    System.Console.Write("Код валюты (например USD): ");
+    string code = (System.Console.ReadLine() ?? "CUR").Trim().ToUpper();
+    System.Console.WriteLine();
+    System.Console.WriteLine($"Конвертация в {code} (курс {rate:0.####} ₽ = 1 {code}):");
+    decimal totalConv = 0;
+    for (int i = 0; i < n; i++)
+    {
+        decimal conv = System.Decimal.Round(prices[i] / rate, 4);
+        totalConv += conv;
+        System.Console.WriteLine($"{i + 1}. {names[i]} — {prices[i]:0.00} ₽ = {conv:0.####} {code}");
+    }
+    System.Console.WriteLine($"Итого: {Sum(prices):0.00} ₽ = {totalConv:0.####} {code}");
 }
 
 
