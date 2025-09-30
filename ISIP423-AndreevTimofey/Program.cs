@@ -1,57 +1,64 @@
-﻿using LibraryConsoleApp.Models;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using LibraryConsoleApp.Data;
+using LibraryConsoleApp.Models;
 
 
-namespace LibraryConsoleApp.Data
+namespace LibraryConsoleApp
 {
-    public class BookRepository
+    class Program
     {
-        private readonly List<Book> books = new List<Book>();
-        private int nextId = 1;
-
-
-        public IEnumerable<Book> GetAll() => books;
-
-
-        public Book Add(Book book)
+        static void Main(string[] args)
         {
-            if (book == null) throw new ArgumentNullException(nameof(book));
-            book.Id = nextId++;
-            books.Add(book);
-            return book;
-        }
+            var repo = new BookRepository();
+            repo.SeedTestData();
 
 
-        public bool RemoveById(int id)
-        {
-            var b = books.FirstOrDefault(x => x.Id == id);
-            if (b == null) return false;
-            return books.Remove(b);
-        }
-
-        public IEnumerable<Book> FindByTitle(string titlePart) =>
-        books.Where(b => b.Title != null && b.Title.IndexOf(titlePart ?? "", StringComparison.OrdinalIgnoreCase) >= 0);
-
-        public IEnumerable<Book> FindByAuthor(string authorPart) =>
-        books.Where(b => b.Author != null && b.Author.IndexOf(authorPart ?? "", StringComparison.OrdinalIgnoreCase) >= 0);
-
-        public IEnumerable<Book> FindByGenre(Genre genre) =>
-        books.Where(b => b.Genre == genre);
+            Console.WriteLine("Welcome to the Library App Twin");
+            
 
 
-        public IEnumerable<Book> SortByTitle(bool ascending = true) =>
-        ascending ? books.OrderBy(b => b.Title) : books.OrderByDescending(b => b.Title);
-
-        public IEnumerable<Book> SortByYear(bool ascending = true) =>
-        ascending ? books.OrderBy(b => b.Year) : books.OrderByDescending(b => b.Year);
-
-        public Book GetMostExpensive() => books.OrderByDescending(b => b.Price).FirstOrDefault();
-        public Book GetLeastExpensive() => books.OrderBy(b => b.Price).FirstOrDefault();
-
-        public IEnumerable<(string Author, int Count)> GroupByAuthorCounts() =>
-        books.GroupBy(b => b.Author)
-        .Select(g => (Author: g.Key ?? "<Unknown>", Count: g.Count()));
+            bool exit = false;
+            while (!exit)
+            {
+                ShowMenu();
+                Console.Write("Select an option twin: ");
+                var input = Console.ReadLine();
 
 
-        public void SeedTestData()
-        {
-        }
+                switch ((input ?? "").Trim())
+                {
+                    case "1":
+                        AddBookInteractive(repo);
+                        break;
+                    case "2":
+                        RemoveBookInteractive(repo);
+                        break;
+                    case "3":
+                        FindByTitleInteractive(repo);
+                        break;
+                    case "4":
+                        FindByAuthorInteractive(repo);
+                        break;
+                    case "5":
+                        FindByGenreInteractive(repo);
+                        break;
+                    case "6":
+                        SortInteractive(repo);
+                        break;
+                    case "7":
+                        ShowMostAndLeastExpensive(repo);
+                        break;
+                    case "8":
+                        GroupByAuthor(repo);
+                        break;
+                    case "9":
+                        ListAll(repo);
+                        break;
+                    case "0":
+                        exit = true;
+                        break;
+                    default:
+                        Console.WriteLine("Unknown option. Please choose a number from the menu twin.");
+                }
