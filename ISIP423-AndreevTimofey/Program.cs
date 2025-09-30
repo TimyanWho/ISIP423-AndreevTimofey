@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using LibraryConsoleApp.Data;
-using LibraryConsoleApp.Models;
-
-
-namespace LibraryConsoleApp
+﻿namespace LibraryConsoleApp
 {
     class Program
     {
