@@ -1,29 +1,57 @@
-﻿namespace LibraryConsoleApp.Models
+﻿using LibraryConsoleApp.Models;
+
+
+namespace LibraryConsoleApp.Data
 {
-    public enum Genre
+    public class BookRepository
     {
-        Fiction = 1,
-        NonFiction = 2,
-        Science = 3,
-        Fantasy = 4,
-        History = 5
-    }
-
-    public class Book
-    {
-        public int Id { get; set; }
-
-        public string Title { get; set; }
-        public string Author { get; set; }
-        public Genre Genre { get; set; }
-        public int Year { get; set; }
-        public decimal Price { get; set; }
-        public int Quantity { get; set; }
+        private readonly List<Book> books = new List<Book>();
+        private int nextId = 1;
 
 
-        public override string ToString()
+        public IEnumerable<Book> GetAll() => books;
+
+
+        public Book Add(Book book)
         {
-            return $"ID: {Id} | Title: {Title} | Author: {Author} | Genre: {Genre} | Year: {Year} | Price: {Price:C} | Qty: {Quantity}";
+            if (book == null) throw new ArgumentNullException(nameof(book));
+            book.Id = nextId++;
+            books.Add(book);
+            return book;
         }
-    }
-}
+
+
+        public bool RemoveById(int id)
+        {
+            var b = books.FirstOrDefault(x => x.Id == id);
+            if (b == null) return false;
+            return books.Remove(b);
+        }
+
+        public IEnumerable<Book> FindByTitle(string titlePart) =>
+        books.Where(b => b.Title != null && b.Title.IndexOf(titlePart ?? "", StringComparison.OrdinalIgnoreCase) >= 0);
+
+        public IEnumerable<Book> FindByAuthor(string authorPart) =>
+        books.Where(b => b.Author != null && b.Author.IndexOf(authorPart ?? "", StringComparison.OrdinalIgnoreCase) >= 0);
+
+        public IEnumerable<Book> FindByGenre(Genre genre) =>
+        books.Where(b => b.Genre == genre);
+
+
+        public IEnumerable<Book> SortByTitle(bool ascending = true) =>
+        ascending ? books.OrderBy(b => b.Title) : books.OrderByDescending(b => b.Title);
+
+        public IEnumerable<Book> SortByYear(bool ascending = true) =>
+        ascending ? books.OrderBy(b => b.Year) : books.OrderByDescending(b => b.Year);
+
+        public Book GetMostExpensive() => books.OrderByDescending(b => b.Price).FirstOrDefault();
+        public Book GetLeastExpensive() => books.OrderBy(b => b.Price).FirstOrDefault();
+
+        public IEnumerable<(string Author, int Count)> GroupByAuthorCounts() =>
+        books.GroupBy(b => b.Author)
+        .Select(g => (Author: g.Key ?? "<Unknown>", Count: g.Count()));
+
+
+        public void SeedTestData()
+        {
+        }
