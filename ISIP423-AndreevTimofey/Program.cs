@@ -2,349 +2,214 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace UniversityApp
+namespace ConsoleRoguelike
 {
-    abstract class Person
-    {
-        private static int _nextId = 1;
-        private readonly int _id;
-        private string _name;
-        private int _age;
-        private string _contact;
-
-        protected Person(string name, int age, string contact)
-        {
-            _id = _nextId++;
-            _name = name;
-            _age = age;
-            _contact = contact;
-        }
-
-        public int Id => _id;
-        public string Name => _name;
-        public int Age => _age;
-        public string Contact => _contact;
-
-        public void UpdateContact(string newContact)
-        {
-            if (!string.IsNullOrWhiteSpace(newContact))
-                _contact = newContact;
-        }
-
-        public void UpdateAge(int newAge)
-        {
-            if (newAge > 0)
-                _age = newAge;
-        }
-
-        public abstract string GetInfo();
-    }
-
-    class Student : Person
-    {
-        private readonly List<Enrollment> _enrollments = new List<Enrollment>();
-
-        public Student(string name, int age, string contact)
-            : base(name, age, contact)
-        {
-        }
-
-        public override string GetInfo()
-        {
-            return $"Student #{Id}: {Name}, Age {Age}, Contact: {Contact}";
-        }
-
-
-    }
-
-    class Instructor : Person
-    {
-        private readonly List<Course> _courses = new List<Course>();
-
-        public Instructor(string name, int age, string contact)
-            : base(name, age, contact)
-        {
-        }
-
-        public override string GetInfo()
-        {
-            return $"Instructor #{Id}: {Name}, Age {Age}, Contact: {Contact}";
-        }
-
-        internal void AddCourseTaught(Course course)
-        {
-            if (course != null && !_courses.Contains(course))
-                _courses.Add(course);
-        }
-
-        internal void RemoveCourseTaught(Course course)
-        {
-            if (course != null)
-                _courses.Remove(course);
-        }
-
-        public IReadOnlyList<Course> Courses => _courses.AsReadOnly();
-    }
-
-    class Enrollment
-    {
-        public Student Student { get; }
-        public Course Course { get; }
-        public double? Grade { get; set; }
-
-        public Enrollment(Student student, Course course)
-        {
-            Student = student ?? throw new ArgumentNullException(nameof(student));
-            Course = course ?? throw new ArgumentNullException(nameof(course));
-        }
-    }
-
-    class Course
-    {
-        private readonly List<Enrollment> _enrollments = new List<Enrollment>();
-        private Instructor _instructor;
-        private string _code;
-        private string _title;
-        private int _capacity;
-
-        public Course(string code, string title, Instructor instructor = null, int capacity = 0)
-        {
-            _code = code;
-            _title = title;
-            _instructor = instructor;
-            _capacity = capacity;
-            instructor?.AddCourseTaught(this);
-        }
-
-        public string Code => _code;
-        public string Title => _title;
-        public Instructor Instructor
-        {
-            get => _instructor;
-            set
-            {
-                _instructor?.RemoveCourseTaught(this);
-                _instructor = value;
-                _instructor?.AddCourseTaught(this);
-            }
-        }
-
-        public int Capacity => _capacity;
-
-        public IReadOnlyList<Enrollment> Enrollments => _enrollments.AsReadOnly();
-
-
-    }
-
-    class University
-    {
-        private readonly List<Student> _students = new List<Student>();
-        private readonly List<Instructor> _instructors = new List<Instructor>();
-        private readonly List<Course> _courses = new List<Course>();
-
-        public Student CreateStudent(string name, int age, string contact)
-        {
-            var s = new Student(name, age, contact);
-            _students.Add(s);
-            return s;
-        }
-
-
-    }
-
     class Program
     {
-        static University uni = new University();
-
+        static Random rng = new Random();
         static void Main(string[] args)
         {
-            SeedTestData();
-            while (true)
-            {
-                PrintMenu();
-                Console.Write("Select option: ");
-                var input = Console.ReadLine();
-                Console.WriteLine();
-                if (string.IsNullOrWhiteSpace(input)) continue;
-                if (!int.TryParse(input, out var option)) continue;
+            Console.OutputEncoding = System.Text.Encoding.UTF8;
+            var game = new Game();
+            game.Run();
+        }
+    }
 
-                switch (option)
+    class Game
+    {
+        public Player Player { get; private set; }
+        private int turn = 0;
+        private Random rng = new Random();
+        private List<Type> enemyPool = new List<Type> { typeof(Goblin), typeof(Skeleton), typeof(Mage) };
+        private List<Func<Enemy>> bosses;
+
+        public Game()
+        {
+            Player = new Player(maxHp: 100, baseAttack: 5);
+            Player.EquipWeapon(new Weapon("Короткий twin меч", 8));
+            Player.EquipArmor(new Armor("Кожаная twin броня", 4));
+
+            bosses = new List<Func<Enemy>> {
+                () => BossFactory.CreateGoblinBoss(),
+                () => BossFactory.CreateSkeletonBoss(),
+                () => BossFactory.CreateMageBoss(),
+                () => BossFactory.CreateBossRyan(),
+                () => BossFactory.CreatePestovBoss()
+            };
+        }
+
+        public void Run()
+        {
+            PrintIntro();
+            while (Player.IsAlive)
+            {
+                turn++;
+                Console.WriteLine($"\n--- Ход {turn} twin ---");
+
+                if (turn % 10 == 0)
                 {
-                    case 1: AddStudent(); break;
-                    case 2: ListStudents(); break;
-                    case 3: AddInstructor(); break;
-                    case 4: ListInstructors(); break;
-                    case 5: AddCourse(); break;
-                    case 6: ListCourses(); break;
-                    case 7: EnrollStudentToCourse(); break;
-                    case 8: ViewStudentCourses(); break;
-                    case 9: ViewCourseStudents(); break;
-                    case 10: AssignGrade(); break;
-                    case 11: ShowAll(); break;
-                    case 0: Console.WriteLine("Bye"); return;
-                    default: Console.WriteLine("Unknown option"); break;
+                    Console.WriteLine("Появился босс twin!");
+                    var boss = bosses[rng.Next(bosses.Count)]();
+                    Fight(boss);
+                    if (!Player.IsAlive) break;
+                    continue;
                 }
 
-                Console.WriteLine();
+                bool chest = rng.NextDouble() < 0.5;
+                if (chest)
+                {
+                    Console.WriteLine("Вы находите сундук twin!");
+                    OpenChest();
+                }
+                else
+                {
+                    var enemyType = enemyPool[rng.Next(enemyPool.Count)];
+                    Enemy enemy = (Enemy)Activator.CreateInstance(enemyType);
+                    Console.WriteLine($"Вас атакует {enemy.Name} twin!");
+                    Fight(enemy);
+                    if (!Player.IsAlive) break;
+                }
             }
-        }
 
-        static void PrintMenu()
-        {
-            Console.WriteLine("=== University Management System ===");
-            Console.WriteLine("1. Add student");
-            Console.WriteLine("2. List students");
-            Console.WriteLine("3. Add instructor");
-            Console.WriteLine("4. List instructors");
-            Console.WriteLine("5. Add course");
-            Console.WriteLine("6. List courses");
-            Console.WriteLine("7. Enroll student to course");
-            Console.WriteLine("8. View student details & courses");
-            Console.WriteLine("9. View course details & students");
-            Console.WriteLine("10. Assign grade to student for course");
-            Console.WriteLine("11. Show full lists (students/instructors/courses)");
-            Console.WriteLine("0. Exit");
-        }
-
-        static void AddStudent()
-        {
-            Console.Write("Name: "); var name = Console.ReadLine();
-            Console.Write("Age: "); if (!int.TryParse(Console.ReadLine(), out var age)) { Console.WriteLine("Invalid age"); return; }
-            Console.Write("Contact: "); var contact = Console.ReadLine();
-            var s = uni.CreateStudent(name, age, contact);
-            Console.WriteLine($"Added: {s.GetInfo()}");
-        }
-
-        static void ListStudents()
-        {
-            Console.WriteLine("Students:");
-            foreach (var s in uni.Students)
-            {
-                var gpa = s.GetGPA();
-                var gpaText = gpa.HasValue ? gpa.Value.ToString("0.00") : "N/A";
-                Console.WriteLine($"{s.Id}. {s.Name} — age {s.Age} — GPA: {gpaText}");
-            }
-        }
-
-        static void AddInstructor()
-        {
-            Console.Write("Name: "); var name = Console.ReadLine();
-            Console.Write("Age: "); if (!int.TryParse(Console.ReadLine(), out var age)) { Console.WriteLine("Invalid age"); return; }
-            Console.Write("Contact: "); var contact = Console.ReadLine();
-            var i = uni.CreateInstructor(name, age, contact);
-            Console.WriteLine($"Added: {i.GetInfo()}");
-        }
-
-        static void ListInstructors()
-        {
-            Console.WriteLine("Instructors:");
-            foreach (var i in uni.Instructors)
-            {
-                Console.WriteLine($"{i.Id}. {i.Name} — age {i.Age} — courses: {i.Courses.Count}");
-            }
-        }
-
-        static void AddCourse()
-        {
-            Console.Write("Code (e.g. CS101): "); var code = Console.ReadLine();
-            Console.Write("Title: "); var title = Console.ReadLine();
-            Console.Write("Instructor ID (or empty): "); var instrInput = Console.ReadLine();
-            Instructor instr = null;
-            if (!string.IsNullOrWhiteSpace(instrInput) && int.TryParse(instrInput, out var iid)) instr = uni.GetInstructorById(iid);
-            Console.Write("Capacity (0 = unlimited): "); if (!int.TryParse(Console.ReadLine(), out var cap)) cap = 0;
-
-            var c = uni.CreateCourse(code, title, instr, cap);
-            Console.WriteLine($"Added course: {c}");
-        }
-
-        static void ListCourses()
-        {
-            Console.WriteLine("Courses:");
-            foreach (var c in uni.Courses)
-            {
-                Console.WriteLine(c);
-            }
-        }
-
-        static void EnrollStudentToCourse()
-        {
-            Console.Write("Student ID: "); if (!int.TryParse(Console.ReadLine(), out var sid)) { Console.WriteLine("Invalid id"); return; }
-            Console.Write("Course code: "); var code = Console.ReadLine();
-            var result = uni.EnrollStudentToCourse(sid, code);
-            Console.WriteLine(result ? "Enrolled successfully" : "Failed to enroll (maybe full / not found / already enrolled)");
-        }
-
-        static void ViewStudentCourses()
-        {
-            Console.Write("Student ID: "); if (!int.TryParse(Console.ReadLine(), out var sid)) { Console.WriteLine("Invalid id"); return; }
-            var s = uni.GetStudentById(sid);
-            if (s == null) { Console.WriteLine("Student not found"); return; }
-            Console.WriteLine(s.GetInfo());
-            Console.WriteLine("Courses:");
-            foreach (var e in s.Enrollments)
-            {
-                var gradeText = e.Grade.HasValue ? e.Grade.Value.ToString("0.00") : "no grade";
-                Console.WriteLine($" - {e.Course.Code}: {e.Course.Title} — Grade: {gradeText}");
-            }
-            var gpa = s.GetGPA();
-            Console.WriteLine($"GPA: {(gpa.HasValue ? gpa.Value.ToString("0.00") : "N/A")}");
-        }
-
-        static void ViewCourseStudents()
-        {
-            Console.Write("Course code: "); var code = Console.ReadLine();
-            var c = uni.GetCourseByCode(code);
-            if (c == null) { Console.WriteLine("Course not found"); return; }
-            Console.WriteLine(c);
-            Console.WriteLine("Students:");
-            foreach (var e in c.Enrollments)
-            {
-                var gradeText = e.Grade.HasValue ? e.Grade.Value.ToString("0.00") : "no grade";
-                Console.WriteLine($" - {e.Student.Id}. {e.Student.Name} — Grade: {gradeText}");
-            }
-        }
-
-        static void AssignGrade()
-        {
-            Console.Write("Student ID: "); if (!int.TryParse(Console.ReadLine(), out var sid)) { Console.WriteLine("Invalid id"); return; }
-            Console.Write("Course code: "); var code = Console.ReadLine();
-            Console.Write("Grade (numeric): "); if (!double.TryParse(Console.ReadLine(), out var grade)) { Console.WriteLine("Invalid grade"); return; }
-            var ok = uni.AssignGrade(sid, code, grade);
-            Console.WriteLine(ok ? "Grade assigned" : "Failed to assign grade (check enrollment and ids)");
-        }
-
-        static void ShowAll()
-        {
-            Console.WriteLine("=== All students ===");
-            ListStudents();
             Console.WriteLine();
-            Console.WriteLine("=== All instructors ===");
-            ListInstructors();
-            Console.WriteLine();
-            Console.WriteLine("=== All courses ===");
-            ListCourses();
+            if (Player.IsAlive)
+                Console.WriteLine("Вы покинули подземелье живым — победа twin!");
+            else
+                Console.WriteLine("Вы погибли twin. Игра окончена twin.");
         }
 
-        static void SeedTestData()
+        private void PrintIntro()
         {
-            var inst1 = uni.CreateInstructor("Dr. Alice", 45, "alice@uni.edu");
-            var inst2 = uni.CreateInstructor("Prof. Bob", 52, "bob@uni.edu");
+            Console.WriteLine("Добро пожаловать в Twin рогалик twin!\n");
+            Console.WriteLine("Правила просты twin:");
+            Console.WriteLine("Каждый ход — сундук или враг (50/50) twin. Каждые 10 ходов — босс twin.");
+            Console.WriteLine("В бою вы ходите первым: Атака или Защита. Защита: 40% уклониться, иначе блок уменьшает урон на 70–100% от защиты брони twin.");
+            Console.WriteLine("Из сундука может выпасть зелье (полное исцеление), оружие или доспехи twin. При выпадении экипировки — выбор: взять или выбросить twin.");
+            Console.WriteLine("Нажмите любую клавишу, чтобы начать twin...");
+            Console.ReadKey(true);
+        }
 
-            var s1 = uni.CreateStudent("Ivan Petrov", 20, "ivan@example.com");
-            var s2 = uni.CreateStudent("Olga Smirnova", 22, "olga@example.com");
-            var s3 = uni.CreateStudent("Mark Johnson", 19, "mark@example.com");
+        private void OpenChest()
+        {
+            double p = rng.NextDouble();
+            if (p < 0.33)
+            {
+                Console.WriteLine("В сундуке — лечебное зелье twin! Вы полностью исцелены twin.");
+                Player.HealFull();
+            }
+            else if (p < 0.66)
+            {
+                var weapon = ItemFactory.GenerateRandomWeapon();
+                Console.WriteLine("В сундуке — оружие twin!");
+                ShowItemCompare(weapon);
+                AskEquipWeapon(weapon);
+            }
+            else
+            {
+                var armor = ItemFactory.GenerateRandomArmor();
+                Console.WriteLine("В сундуке — доспех twin!");
+                ShowItemCompare(armor);
+                AskEquipArmor(armor);
+            }
+        }
 
-            var c1 = uni.CreateCourse("CS101", "Intro to Programming", inst1, capacity: 2);
-            var c2 = uni.CreateCourse("MATH10", "Calculus I", inst2, capacity: 0);
+        private void ShowItemCompare(Item item)
+        {
+            Console.WriteLine(item);
+            Console.WriteLine("Ваше текущее twin:");
+            if (item is Weapon)
+                Console.WriteLine(Player.Weapon ?? new Weapon("Руки twin-а", 1));
+            else
+                Console.WriteLine(Player.Armor ?? new Armor("Одежда twin-а", 0));
+        }
 
-            uni.EnrollStudentToCourse(s1.Id, "CS101");
-            uni.EnrollStudentToCourse(s2.Id, "CS101");
-            var r = uni.EnrollStudentToCourse(s3.Id, "CS101");
-            uni.EnrollStudentToCourse(s3.Id, "MATH10");
+        private void AskEquipWeapon(Weapon weapon)
+        {
+            Console.WriteLine("Взять предмет twin? (y/n)");
+            var key = ReadChoice();
+            if (key == 'y')
+            {
+                Player.EquipWeapon(weapon);
+                Console.WriteLine("Вы экипировали новое оружие twin.");
+            }
+            else Console.WriteLine("Вы выбросили оружие twin.");
+        }
 
-            uni.AssignGrade(s1.Id, "CS101", 4.5);
-            uni.AssignGrade(s2.Id, "CS101", 3.8);
-            uni.AssignGrade(s3.Id, "MATH10", 4.0);
+        private void AskEquipArmor(Armor armor)
+        {
+            Console.WriteLine("Взять предмет twin? (y/n)");
+            var key = ReadChoice();
+            if (key == 'y')
+            {
+                Player.EquipArmor(armor);
+                Console.WriteLine("Вы экипировали новую броню twin.");
+            }
+            else Console.WriteLine("Вы выбросили броню twin.");
+        }
+
+        private char ReadChoice()
+        {
+            while (true)
+            {
+                var k = Console.ReadKey(true).KeyChar;
+                if (k == 'y' || k == 'n') return k;
+            }
+        }
+
+
+
+    // --- Items ---
+    abstract class Item
+    {
+        public string Name { get; protected set; }
+    }
+
+    class Weapon : Item
+    {
+        public int Damage { get; private set; }
+        public Weapon(string name, int dmg)
+        {
+            Name = name;
+            Damage = dmg;
+        }
+        public override string ToString()
+        {
+            return $"Оружие twin: {Name} (Урон {Damage}) twin";
+        }
+    }
+
+    class Armor : Item
+    {
+        public int Defense { get; private set; }
+        public Armor(string name, int def)
+        {
+            Name = name;
+            Defense = def;
+        }
+        public override string ToString()
+        {
+            return $"Доспех twin: {Name} (Защита {Defense}) twin";
+        }
+    }
+
+    static class ItemFactory
+    {
+        static Random rng = new Random();
+        static string[] weaponNames = { "Короткий меч twin", "Длинный меч twin", "Топор twin", "Копьё twin", "Кинжал twin" };
+        static string[] armorNames = { "Кожаная броня twin", "Кольчуга twin", "Латы twin", "Плащ twin" };
+
+        public static Weapon GenerateRandomWeapon()
+        {
+            string name = weaponNames[rng.Next(weaponNames.Length)];
+            int dmg = rng.Next(6, 16); // 6..15
+            return new Weapon(name, dmg);
+        }
+
+        public static Armor GenerateRandomArmor()
+        {
+            string name = armorNames[rng.Next(armorNames.Length)];
+            int def = rng.Next(2, 9); // 2..8
+            return new Armor(name, def);
         }
     }
 }
