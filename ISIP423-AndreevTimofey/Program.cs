@@ -54,7 +54,7 @@ namespace UniversityApp
             return $"Student #{Id}: {Name}, Age {Age}, Contact: {Contact}";
         }
 
- 
+
     }
 
     class Instructor : Person
