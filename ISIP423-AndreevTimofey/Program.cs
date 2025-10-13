@@ -97,6 +97,7 @@ namespace ConsoleTwin
 
         private void OpenChest()
         {
+            Console.Clear();
             double p = rng.NextDouble();
             if (p < 0.33)
             {
