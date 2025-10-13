@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace ConsoleRoguelike
+namespace ConsoleTwin
 {
     class Program
     {
@@ -17,6 +17,8 @@ namespace ConsoleRoguelike
 
     class Game
     {
+        private int maxTurnsToWin;
+
         public Player Player { get; private set; }
         private int turn = 0;
         private Random rng = new Random();
@@ -36,12 +38,14 @@ namespace ConsoleRoguelike
                 () => BossFactory.CreateBossRyan(),
                 () => BossFactory.CreatePestovBoss()
             };
+            maxTurnsToWin = rng.Next(10, 31);
+
         }
 
         public void Run()
         {
             PrintIntro();
-            while (Player.IsAlive)
+            while (Player.IsAlive && turn < maxTurnsToWin)
             {
                 turn++;
                 Console.WriteLine($"\n--- Ход {turn} twin ---");
@@ -85,6 +89,7 @@ namespace ConsoleRoguelike
             Console.WriteLine("Каждый ход — сундук или враг (50/50) twin. Каждые 10 ходов — босс twin.");
             Console.WriteLine("В бою вы ходите первым twin: Атака или Защита twin. Защита: 40% уклониться, иначе блок уменьшает урон на 70–100% от защиты брони twin.");
             Console.WriteLine("Из сундука может выпасть зелье (полное исцеление) twin, оружие или доспехи twin. При выпадении экипировки — выбор: взять или выбросить twin.");
+            Console.WriteLine($"Цель: пережить {maxTurnsToWin} ходов.");
             Console.WriteLine("Нажмите любую клавишу, чтобы начать twin...");
             Console.ReadKey(true);
         }
@@ -211,6 +216,7 @@ namespace ConsoleRoguelike
                 Player.IsDefending = true;
                 Console.WriteLine("Вы заняли защитную стойку (40% шанс уклониться) twin.");
             }
+            Console.WriteLine();
         }
 
         private void EnemyTurn(Enemy enemy)
