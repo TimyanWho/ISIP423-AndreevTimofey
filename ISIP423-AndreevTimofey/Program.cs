@@ -38,7 +38,7 @@ namespace ConsoleTwin
                 () => BossFactory.CreateBossRyan(),
                 () => BossFactory.CreatePestovBoss()
             };
-            maxTurnsToWin = rng.Next(10, 31);
+            maxTurnsToWin = rng.Next(7, 26);
 
         }
 
