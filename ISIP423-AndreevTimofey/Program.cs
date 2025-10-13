@@ -27,6 +27,7 @@ namespace ConsoleTwin
 
         public Game()
         {
+
             Player = new Player(maxHp: 100, baseAttack: 5);
             Player.EquipWeapon(new Weapon("Короткий twin меч", 8));
             Player.EquipArmor(new Armor("Кожаная twin броня", 4));
@@ -166,30 +167,47 @@ namespace ConsoleTwin
             Console.WriteLine(enemy.GetStats());
             while (enemy.IsAlive && Player.IsAlive)
             {
-                if (Player.IsFrozen)
+                Console.Clear();
+                Console.WriteLine($"Бой: {enemy.Name}   Ход: {turn}/{maxTurnsToWin}");
+                Console.WriteLine(enemy.GetStats());
                 {
-                    Console.WriteLine("Вы заморожены и пропускаете ход twin!");
-                    Player.IsFrozen = false; // пропуск только одного хода
+                    if (Player.IsFrozen)
+                    {
+                        Console.WriteLine("Вы заморожены и пропускаете ход twin!");
+                        Player.IsFrozen = false; // пропуск только одного хода
+                    }
+                    else
+                    {
+                        PlayerTurn(enemy);
+                    }
+
+                    if (!enemy.IsAlive) break;
+
+                    EnemyTurn(enemy);
                 }
-                else
+
+                if (Player.IsAlive && !enemy.IsAlive)
                 {
-                    PlayerTurn(enemy);
+                    Console.WriteLine($"Вы победили {enemy.Name} twin!");
                 }
-
-                if (!enemy.IsAlive) break;
-
-                EnemyTurn(enemy);
-            }
-
-            if (Player.IsAlive && !enemy.IsAlive)
-            {
-                Console.WriteLine($"Вы победили {enemy.Name} twin!");
             }
         }
 
         private void PlayerTurn(Enemy enemy)
         {
-            Console.WriteLine($"Ваше HP twin: {Player.HP}/{Player.MaxHP}  |  Оружие twin-a: {Player.Weapon.Name} (DMG {Player.Weapon.Damage})  |  Броня twin-a: {Player.Armor.Name} (DEF {Player.Armor.Defense})");
+            int curHp = Player.HP;
+            int maxHp = Player.MaxHP;
+            var prevColor = Console.ForegroundColor;
+
+            Console.Write("Ваше HP: ");
+            if (curHp <= Math.Max(1, maxHp / 5))
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+            }
+            Console.Write($"{curHp}/{maxHp}");
+            Console.ForegroundColor = prevColor;
+
+            Console.WriteLine($"  |  Оружие: {Player.Weapon.Name} (DMG {Player.Weapon.Damage})  |  Броня: {Player.Armor.Name} (DEF {Player.Armor.Defense})");
             Console.WriteLine($"Враг twin: {enemy.Name}  HP:{enemy.HP}/{enemy.MaxHP}");
             Console.WriteLine("Выберите действие: (1) Атака twin  (2) Защита twin (q) Выход twin");
             char key;
