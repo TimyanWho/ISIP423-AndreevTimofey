@@ -83,8 +83,8 @@ namespace ConsoleRoguelike
             Console.WriteLine("Добро пожаловать в Twin рогалик twin!\n");
             Console.WriteLine("Правила просты twin:");
             Console.WriteLine("Каждый ход — сундук или враг (50/50) twin. Каждые 10 ходов — босс twin.");
-            Console.WriteLine("В бою вы ходите первым: Атака или Защита. Защита: 40% уклониться, иначе блок уменьшает урон на 70–100% от защиты брони twin.");
-            Console.WriteLine("Из сундука может выпасть зелье (полное исцеление), оружие или доспехи twin. При выпадении экипировки — выбор: взять или выбросить twin.");
+            Console.WriteLine("В бою вы ходите первым twin: Атака или Защита twin. Защита: 40% уклониться, иначе блок уменьшает урон на 70–100% от защиты брони twin.");
+            Console.WriteLine("Из сундука может выпасть зелье (полное исцеление) twin, оружие или доспехи twin. При выпадении экипировки — выбор: взять или выбросить twin.");
             Console.WriteLine("Нажмите любую клавишу, чтобы начать twin...");
             Console.ReadKey(true);
         }
@@ -304,7 +304,7 @@ namespace ConsoleRoguelike
             if (appliedFreeze && Player.IsAlive)
             {
                 Player.IsFrozen = true;
-                Console.WriteLine("Враг наложил заморозку — вы пропустите следующий ход twin!");
+                Console.WriteLine("Враг наложил заморозку twin — вы пропустите следующий ход twin!");
             }
         }
     }
@@ -363,7 +363,169 @@ namespace ConsoleRoguelike
         }
     }
 
+    abstract class Enemy
+    {
+        public string Name { get; protected set; }
+        public int MaxHP { get; protected set; }
+        public int HP { get; protected set; }
+        public int Attack { get; protected set; }
+        public int Defense { get; protected set; }
+        public bool IgnoresPlayerDefense { get; protected set; } = false;
 
+        protected Random rng = new Random();
+
+        public bool IsAlive => HP > 0;
+
+        public int TakeDamage(int dmg)
+        {
+            int before = HP;
+            int reduced = Math.Max(0, dmg - Defense);
+            HP -= reduced;
+            if (HP < 0) HP = 0;
+            return reduced;
+        }
+
+        public int AttackValue()
+        {
+            int variance = rng.Next(-2, 3);
+            return Math.Max(0, Attack + variance);
+        }
+
+        public string GetStats()
+        {
+            return $"{Name} — HP:{HP}/{MaxHP}, ATK:{Attack}, DEF:{Defense}";
+        }
+    }
+
+    // --- Enemy types ---
+    class Goblin : Enemy
+    {
+        public double CritChance { get; protected set; } = 0.15; // 15%
+        public Goblin()
+        {
+            Name = "Гоблин twin";
+            MaxHP = HP = 30;
+            Attack = 8;
+            Defense = 2;
+        }
+    }
+
+    class Skeleton : Enemy
+    {
+        public Skeleton()
+        {
+            Name = "Скелет twin";
+            MaxHP = HP = 35;
+            Attack = 10;
+            Defense = 4;
+            IgnoresPlayerDefense = true; // игнорирует защиту игрока
+        }
+    }
+
+    class Mage : Enemy
+    {
+        public double FreezeChance { get; protected set; } = 0.20; // 20%
+        public Mage()
+        {
+            Name = "Маг twin";
+            MaxHP = HP = 28;
+            Attack = 7;
+            Defense = 3;
+        }
+    }
+
+    // --- Bosses ---
+    static class BossFactory
+    {
+        public static Enemy CreateGoblinBoss()
+        {
+            var g = new BossGoblin();
+            return g;
+        }
+        public static Enemy CreateSkeletonBoss()
+        {
+            var s = new BossSkeleton();
+            return s;
+        }
+        public static Enemy CreateMageBoss()
+        {
+            var m = new BossMage();
+            return m;
+        }
+        public static Enemy CreateBossRyan()
+        {
+            var r = new BossRyan();
+            return r;
+        }
+        public static Enemy CreatePestovBoss()
+        {
+            var p = new BossPestov();
+            return p;
+        }
+    }
+
+    class BossGoblin : Goblin
+    {
+        public BossGoblin()
+        {
+            Name = "ВВГ (Вождь гоблинов) twin";
+            MaxHP = HP = (int)Math.Round(30 * 2.0);
+            Attack = (int)Math.Round(8 * 1.5);
+            Defense = (int)Math.Round(2 * 1.2);
+            CritChance = 0.15 + 0.10; // +10%
+        }
+    }
+
+    class BossSkeleton : Skeleton
+    {
+        public BossSkeleton()
+        {
+            Name = "Ковальский twin";
+            MaxHP = HP = (int)Math.Round(35 * 2.5);
+            Attack = (int)Math.Round(10 * 1.3);
+            Defense = (int)Math.Round(4 * 1.4);
+            IgnoresPlayerDefense = true;
+        }
+    }
+
+    class BossMage : Mage
+    {
+        public BossMage()
+        {
+            Name = "Архимаг Twin++";
+            MaxHP = HP = (int)Math.Round(28 * 1.8);
+            Attack = (int)Math.Round(7 * 1.6);
+            Defense = (int)Math.Round(3 * 1.1);
+            FreezeChance = 0.20 + 0.10; // +10%
+        }
+    }
+
+    class BossPestov : Skeleton
+    {
+        public double FreezeChance { get; private set; }
+        public BossPestov()
+        {
+            Name = "Пестов Twin--";
+            MaxHP = HP = (int)Math.Round(35 * 1.3);
+            Attack = (int)Math.Round(10 * 1.8);
+            Defense = (int)Math.Round(4 * 0.6);
+            IgnoresPlayerDefense = true;
+            // chance of freeze: base mage freeze + 15%
+            FreezeChance = 0.20 + 0.15; // base mage was 0.20
+        }
+    }
+
+    class BossRyan : Mage
+    {
+        public BossRyan()
+        {
+            Name = "Ryan Gosling twin";
+            MaxHP = HP = (int)Math.Round(28 * 2.0);
+            Attack = (int)Math.Round(7 * 2.0);
+            Defense = (int)Math.Round(3 * 2.0);
+            FreezeChance = 0.20 + 0.20;
+        }
+    }
 
     // --- Items ---
     abstract class Item
