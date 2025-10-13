@@ -38,7 +38,7 @@ namespace ConsoleTwin
                 () => BossFactory.CreateBossRyan(),
                 () => BossFactory.CreatePestovBoss()
             };
-            maxTurnsToWin = rng.Next(7, 26);
+            maxTurnsToWin = rng.Next(10, 31);
 
         }
 
@@ -87,9 +87,9 @@ namespace ConsoleTwin
             Console.WriteLine("Добро пожаловать в Twin рогалик twin!\n");
             Console.WriteLine("Правила просты twin:");
             Console.WriteLine("Каждый ход — сундук или враг (50/50) twin. Каждые 10 ходов — босс twin.");
-            Console.WriteLine("В бою вы ходите первым twin: Атака или Защита twin. Защита: 40% уклониться, иначе блок уменьшает урон на 70–100% от защиты брони twin.");
+            Console.WriteLine("В бою вы ходите первым twin: Атака или Защита twin. Защита: 40% уклониться twin, иначе блок уменьшает урон на 70–100% от защиты брони twin.");
             Console.WriteLine("Из сундука может выпасть зелье (полное исцеление) twin, оружие или доспехи twin. При выпадении экипировки — выбор: взять или выбросить twin.");
-            Console.WriteLine($"Цель: пережить {maxTurnsToWin} ходов.");
+            Console.WriteLine($"Цель: ПЕРЕЖИТЬ (Outlast) {maxTurnsToWin} ходов twin.");
             Console.WriteLine("Нажмите любую клавишу, чтобы начать twin...");
             Console.ReadKey(true);
         }
