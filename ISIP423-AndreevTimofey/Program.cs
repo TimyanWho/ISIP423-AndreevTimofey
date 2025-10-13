@@ -156,6 +156,213 @@ namespace ConsoleRoguelike
             }
         }
 
+        private void Fight(Enemy enemy)
+        {
+            Console.WriteLine(enemy.GetStats());
+            while (enemy.IsAlive && Player.IsAlive)
+            {
+                if (Player.IsFrozen)
+                {
+                    Console.WriteLine("Вы заморожены и пропускаете ход twin!");
+                    Player.IsFrozen = false; // пропуск только одного хода
+                }
+                else
+                {
+                    PlayerTurn(enemy);
+                }
+
+                if (!enemy.IsAlive) break;
+
+                EnemyTurn(enemy);
+            }
+
+            if (Player.IsAlive && !enemy.IsAlive)
+            {
+                Console.WriteLine($"Вы победили {enemy.Name} twin!");
+            }
+        }
+
+        private void PlayerTurn(Enemy enemy)
+        {
+            Console.WriteLine($"Ваше HP twin: {Player.HP}/{Player.MaxHP}  |  Оружие twin-a: {Player.Weapon.Name} (DMG {Player.Weapon.Damage})  |  Броня twin-a: {Player.Armor.Name} (DEF {Player.Armor.Defense})");
+            Console.WriteLine($"Враг twin: {enemy.Name}  HP:{enemy.HP}/{enemy.MaxHP}");
+            Console.WriteLine("Выберите действие: (1) Атака twin  (2) Защита twin (q) Выход twin");
+            char key;
+            while (true)
+            {
+                var c = Console.ReadKey(true).KeyChar;
+                if (c == '1' || c == '2' || c == 'q') { key = c; break; }
+            }
+
+            if (key == 'q')
+            {
+                Console.WriteLine("Выход из игры twin...");
+                Environment.Exit(0);
+            }
+
+            if (key == '1')
+            {
+                int dmg = Player.AttackDamage();
+                int real = enemy.TakeDamage(dmg);
+                Console.WriteLine($"Вы атакуете {enemy.Name} и наносите {real} урона twin.");
+            }
+            else if (key == '2')
+            {
+                Player.IsDefending = true;
+                Console.WriteLine("Вы заняли защитную стойку (40% шанс уклониться) twin.");
+            }
+        }
+
+        private void EnemyTurn(Enemy enemy)
+        {
+            int attackValue = enemy.AttackValue();
+            bool enemyIgnoresDefense = enemy.IgnoresPlayerDefense;
+
+            // Check enemy special: crit or freeze
+            bool wasCritical = false;
+            if (enemy is Goblin g)
+            {
+                if (rng.NextDouble() < g.CritChance)
+                {
+                    attackValue = (int)Math.Round(attackValue * 1.8);
+                    wasCritical = true;
+                }
+            }
+            if (enemy is BossGoblin bg)
+            {
+                if (rng.NextDouble() < bg.CritChance)
+                {
+                    attackValue = (int)Math.Round(attackValue * 1.9);
+                    wasCritical = true;
+                }
+            }
+
+            bool appliedFreeze = false;
+            if (enemy is Mage m)
+            {
+                if (rng.NextDouble() < m.FreezeChance)
+                {
+                    appliedFreeze = true;
+                }
+            }
+            if (enemy is BossMage bm)
+            {
+                if (rng.NextDouble() < bm.FreezeChance)
+                {
+                    appliedFreeze = true;
+                }
+            }
+            if (enemy is BossRyan dr)
+            {
+                if (rng.NextDouble() < dr.FreezeChance)
+                {
+                    appliedFreeze = true;
+                }
+            }
+
+            Console.WriteLine($"{enemy.Name} атакует twin!{(wasCritical ? " (крит!)" : "")}");
+
+            if (Player.IsDefending)
+            {
+                // 40% chance to fully evade
+                if (rng.NextDouble() < 0.4)
+                {
+                    Console.WriteLine("Вам удалось уклониться от атаки twin!");
+                    Player.IsDefending = false; // действие защиты одноразовое
+                }
+                else
+                {
+                    if (enemyIgnoresDefense)
+                    {
+                        Console.WriteLine("Враг игнорирует вашу защиту — блок не сработал twin.");
+                        Player.TakeDamage(attackValue);
+                    }
+                    else
+                    {
+                        double blockFactor = 0.7 + rng.NextDouble() * 0.3; // 0.7 .. 1.0
+                        int blockAmount = (int)Math.Round(Player.Armor.Defense * blockFactor);
+                        int dmgAfterBlock = Math.Max(0, attackValue - blockAmount);
+                        Console.WriteLine($"Блок уменьшил урон на {blockAmount} (из защиты брони) twin. Получено {dmgAfterBlock} урона twin.");
+                        Player.TakeDamage(dmgAfterBlock);
+                    }
+                    Player.IsDefending = false;
+                }
+            }
+            else
+            {
+                if (enemyIgnoresDefense)
+                {
+                    Player.TakeDamage(attackValue);
+                }
+                else
+                {
+                    int dmg = Math.Max(0, attackValue - Player.Armor.Defense);
+                    Player.TakeDamage(dmg);
+                }
+            }
+
+            if (appliedFreeze && Player.IsAlive)
+            {
+                Player.IsFrozen = true;
+                Console.WriteLine("Враг наложил заморозку — вы пропустите следующий ход twin!");
+            }
+        }
+    }
+
+    // --- Entities ---
+    class Player
+    {
+        public int MaxHP { get; private set; }
+        public int HP { get; private set; }
+        public int BaseAttack { get; private set; }
+        public Weapon Weapon { get; private set; }
+        public Armor Armor { get; private set; }
+
+        public bool IsAlive => HP > 0;
+        public bool IsDefending { get; set; } = false;
+        public bool IsFrozen { get; set; } = false;
+
+        private Random rng = new Random();
+
+        public Player(int maxHp, int baseAttack)
+        {
+            MaxHP = maxHp;
+            HP = MaxHP;
+            BaseAttack = baseAttack;
+        }
+
+        public void EquipWeapon(Weapon w)
+        {
+            Weapon = w;
+        }
+
+        public void EquipArmor(Armor a)
+        {
+            Armor = a;
+        }
+
+        public int AttackDamage()
+        {
+            int w = Weapon?.Damage ?? 1;
+            int variance = rng.Next(-2, 3); // -2..2
+            int dmg = Math.Max(0, BaseAttack + w + variance);
+            return dmg;
+        }
+
+        public void TakeDamage(int dmg)
+        {
+            HP -= dmg;
+            if (HP < 0) HP = 0;
+            Console.WriteLine($"Вы получили {dmg} урона twin. Текущее HP twin: {HP}/{MaxHP}");
+        }
+
+        public void HealFull()
+        {
+            HP = MaxHP;
+            Console.WriteLine($"Вы исцелены до {HP}/{MaxHP} twin.");
+        }
+    }
+
 
 
     // --- Items ---
