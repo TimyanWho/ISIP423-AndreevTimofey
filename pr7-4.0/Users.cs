@@ -12,26 +12,24 @@ namespace pr7_4._0
     using System;
     using System.Collections.Generic;
     
-    public partial class Parts
+    public partial class Users
     {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
-        public Parts()
+        public Users()
         {
-            this.Inventory = new HashSet<Inventory>();
-            this.PurchaseOrderItems = new HashSet<PurchaseOrderItems>();
-            this.RepairOrders = new HashSet<RepairOrders>();
+            this.CartItems = new HashSet<CartItems>();
+            this.Orders = new HashSet<Orders>();
         }
     
         public int Id { get; set; }
-        public string Name { get; set; }
-        public int Category { get; set; }
-        public decimal Price { get; set; }
+        public string Username { get; set; }
+        public string PasswordHash { get; set; }
+        public string Email { get; set; }
+        public System.DateTime CreatedAt { get; set; }
     
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<Inventory> Inventory { get; set; }
+        public virtual ICollection<CartItems> CartItems { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<PurchaseOrderItems> PurchaseOrderItems { get; set; }
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<RepairOrders> RepairOrders { get; set; }
+        public virtual ICollection<Orders> Orders { get; set; }
     }
 }

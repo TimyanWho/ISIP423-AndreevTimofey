@@ -1,421 +1,159 @@
-﻿// Практическая работа №7 — Декомпозиция и рабочее меню (C#)
-// Файл: Pr7_Decomposition_and_Skeleton.cs
-// Описание: обновлённый каркас — все сущности + реализованы основные
-// методы AutoService (in-memory). Добавлено консольное меню в Main для
-// управления сервисом и тестирования логики. Совместимо с C# 7.3.
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace AutoServicePr7
+namespace MarketplacePr8
 {
-    public enum PartCategory { Engine = 0, Transmission = 1, Electrical = 2, Suspension = 3, Brake = 4, Body = 5, Other = 6 }
-    public enum RepairStatus { Pending = 0, InProgress = 1, Completed = 2, Refused = 3, Failed = 4 }
 
-    public class Part
+    #region Модели
+
+    public class User
+    {
+        public int Id { get; set; }
+        public string Username { get; set; }
+        public string PasswordHash { get; set; }
+        public string Email { get; set; }
+
+        public List<Order> Orders { get; set; }
+        public Cart Cart { get; set; }
+
+        public User()
+        {
+            Username = string.Empty;
+            PasswordHash = string.Empty;
+            Email = string.Empty;
+            Orders = new List<Order>();
+            Cart = new Cart();
+        }
+
+        public void ValidateForRegistration()
+        {
+            if (string.IsNullOrWhiteSpace(Username)) throw new ArgumentException("Username не может быть пустым");
+            if (string.IsNullOrWhiteSpace(PasswordHash)) throw new ArgumentException("Password не может быть пустым");
+        }
+    }
+
+    public class Product
     {
         public int Id { get; set; }
         public string Name { get; set; }
-        public PartCategory Category { get; set; }
+        public string Description { get; set; }
         public decimal Price { get; set; }
+        public int Stock { get; set; }
 
-        public Part()
+        public Product()
         {
             Name = string.Empty;
-            Category = PartCategory.Other;
+            Description = string.Empty;
             Price = 0m;
+            Stock = 0;
         }
 
         public void Validate()
         {
             if (string.IsNullOrWhiteSpace(Name)) throw new ArgumentException("Name не может быть пустым");
             if (Price < 0) throw new ArgumentException("Price не может быть отрицательной");
+            if (Stock < 0) throw new ArgumentException("Stock не может быть отрицательным");
         }
     }
 
-    public class InventoryEntry
+    public class CartItem
     {
-        public int Id { get; set; }
-        public int PartId { get; set; }
-        public Part Part { get; set; }
+        public int ProductId { get; set; }
+        public Product Product { get; set; }
         public int Quantity { get; set; }
 
-        public InventoryEntry()
+        public CartItem()
         {
-            Part = new Part();
+            Product = new Product();
             Quantity = 0;
         }
-
-        public void Validate()
-        {
-            if (Quantity < 0) throw new ArgumentException("Quantity не может быть отрицательной");
-        }
     }
 
-    public class Client
+    public class Cart
     {
-        public int Id { get; set; }
-        public string FullName { get; set; }
-        public string Email { get; set; }
-        public string Phone { get; set; }
-        public List<Car> Cars { get; set; }
-
-        public Client()
+        public List<CartItem> Items { get; set; }
+        public Cart()
         {
-            FullName = string.Empty;
-            Email = string.Empty;
-            Phone = string.Empty;
-            Cars = new List<Car>();
+            Items = new List<CartItem>();
         }
 
-        public void Validate()
+        public decimal TotalAmount()
         {
-            if (string.IsNullOrWhiteSpace(FullName)) throw new ArgumentException("FullName не может быть пустым");
+            decimal sum = 0m;
+            foreach (var it in Items) sum += it.Product.Price * it.Quantity;
+            return sum;
         }
     }
 
-    public class Car
-    {
-        public int Id { get; set; }
-        public int ClientId { get; set; }
-        public Client Owner { get; set; }
-        public string Model { get; set; }
-        public string VIN { get; set; }
-        public int? Year { get; set; }
-
-        public Car()
-        {
-            Owner = new Client();
-            Model = string.Empty;
-            VIN = string.Empty;
-        }
-
-        public void Validate()
-        {
-            if (string.IsNullOrWhiteSpace(Model)) throw new ArgumentException("Model не может быть пустым");
-        }
-    }
-
-    public class Mechanic
+    public class PVZ
     {
         public int Id { get; set; }
         public string Name { get; set; }
-        public decimal HourlyRate { get; set; }
+        public string Address { get; set; }
 
-        public Mechanic()
+        public PVZ()
         {
             Name = string.Empty;
-            HourlyRate = 0m;
-        }
-
-        public void Validate()
-        {
-            if (string.IsNullOrWhiteSpace(Name)) throw new ArgumentException("Name не может быть пустым");
-            if (HourlyRate < 0) throw new ArgumentException("HourlyRate не может быть отрицательным");
+            Address = string.Empty;
         }
     }
 
-    public class RepairOrder
+    public class Order
     {
         public int Id { get; set; }
-        public int ClientId { get; set; }
-        public Client Client { get; set; }
-        public int CarId { get; set; }
-        public Car Car { get; set; }
-        public int? RequiredPartId { get; set; }
-        public Part RequiredPart { get; set; }
-        public decimal LaborCost { get; set; }
-        public decimal PartCost { get; set; }
-        public decimal TotalCost { get; set; }
-        public RepairStatus Status { get; set; }
+        public int UserId { get; set; }
+        public List<CartItem> Items { get; set; }
+        public decimal Total { get; set; }
         public DateTime CreatedAt { get; set; }
+        public int PVZId { get; set; }
 
-        public RepairOrder()
+        public Order()
         {
-            Client = new Client();
-            Car = new Car();
-            RequiredPartId = null;
-            RequiredPart = new Part();
-            LaborCost = 0m;
-            PartCost = 0m;
-            TotalCost = 0m;
-            Status = RepairStatus.Pending;
+            Items = new List<CartItem>();
+            Total = 0m;
             CreatedAt = DateTime.UtcNow;
         }
-
-        public void Validate()
-        {
-            if (ClientId <= 0) throw new ArgumentException("ClientId должен быть положительным");
-            if (CarId <= 0) throw new ArgumentException("CarId должен быть положительным");
-            if (LaborCost < 0) throw new ArgumentException("LaborCost не может быть отрицательной");
-            if (PartCost < 0) throw new ArgumentException("PartCost не может быть отрицательной");
-        }
     }
 
-    public class PurchaseOrder
-    {
-        public int Id { get; set; }
-        public int PlacedAtClientCounter { get; set; }
-        public int ArrivesAfterClients { get; set; }
-        public bool IsDelivered { get; set; }
-        public Dictionary<int, int> Items { get; set; }
-        public decimal TotalCost { get; set; }
+    #endregion
 
-        public PurchaseOrder()
-        {
-            PlacedAtClientCounter = 0;
-            ArrivesAfterClients = 2;
-            IsDelivered = false;
-            Items = new Dictionary<int, int>();
-            TotalCost = 0m;
-        }
+   
 
-        public void Validate()
-        {
-            if (ArrivesAfterClients < 0) throw new ArgumentException("ArrivesAfterClients не может быть отрицательным");
-            if (Items == null || Items.Count == 0) throw new ArgumentException("Items не может быть пустым");
-            foreach (var kv in Items)
-            {
-                if (kv.Key <= 0) throw new ArgumentException("PartId должен быть положительным");
-                if (kv.Value <= 0) throw new ArgumentException("Quantity должен быть положительным");
-            }
-            if (TotalCost < 0) throw new ArgumentException("TotalCost не может быть отрицательной");
-        }
-    }
-
-    public class AutoService
-    {
-        public decimal Balance { get; private set; }
-        public List<InventoryEntry> Inventory { get; private set; }
-        public Queue<RepairOrder> ClientQueue { get; private set; }
-        public List<RepairOrder> OrdersHistory { get; private set; }
-        public List<PurchaseOrder> IncomingPurchases { get; private set; }
-        public int ServedClientsCounter { get; private set; }
-        public decimal RefusalPenaltyPercent { get; set; }
-
-        // Справочники (в реальной интеграции — данные из БД)
-        public List<Part> PartsCatalog { get; private set; }
-        public List<Client> Clients { get; private set; }
-        public List<Mechanic> Mechanics { get; private set; }
-
-        public AutoService(decimal startingBalance)
-        {
-            if (startingBalance < 0) throw new ArgumentException("startingBalance не может быть отрицательным");
-            Balance = startingBalance;
-            Inventory = new List<InventoryEntry>();
-            ClientQueue = new Queue<RepairOrder>();
-            OrdersHistory = new List<RepairOrder>();
-            IncomingPurchases = new List<PurchaseOrder>();
-            ServedClientsCounter = 0;
-            RefusalPenaltyPercent = 0.5m;
-
-            PartsCatalog = new List<Part>();
-            Clients = new List<Client>();
-            Mechanics = new List<Mechanic>();
-        }
-
-        // Декомпозиция — публичные методы реализованы простым, но корректным образом
-
-        public void EnqueueClient(RepairOrder order)
-        {
-            if (order == null) throw new ArgumentNullException("order");
-            order.Validate();
-            order.Status = RepairStatus.Pending;
-            ClientQueue.Enqueue(order);
-        }
-
-        public void ProcessNextClient()
-        {
-            if (ClientQueue.Count == 0)
-            {
-                Console.WriteLine("Нет клиентов в очереди.");
-                return;
-            }
-
-            var order = ClientQueue.Dequeue();
-            Console.WriteLine($"Обрабатываем заказ #{order.Id} для клиента {order.Client.FullName} (машина: {order.Car.Model})");
-
-            // Если нужна запчасть
-            if (order.RequiredPartId.HasValue && order.RequiredPartId.Value > 0)
-            {
-                if (HasPart(order.RequiredPartId.Value, 1))
-                {
-                    // Успешный ремонт
-                    ConsumePart(order.RequiredPartId.Value, 1);
-                    Balance += order.TotalCost;
-                    order.Status = RepairStatus.Completed;
-                    Console.WriteLine($"Ремонт выполнен. Получено {order.TotalCost} ₽. Баланс: {Balance} ₽");
-                }
-                else
-                {
-                    // Нет нужной детали — по условию выберем отказ и начислим штраф
-                    RefuseClient(order);
-                }
-            }
-            else
-            {
-                // Работа без детали — просто начисляем оплату
-                Balance += order.TotalCost;
-                order.Status = RepairStatus.Completed;
-                Console.WriteLine($"Работа выполнена (без замены деталей). Получено {order.TotalCost} ₽. Баланс: {Balance} ₽");
-            }
-
-            OrdersHistory.Add(order);
-            ServedClientsCounter++;
-            CheckAndDeliverPurchases();
-        }
-
-        public void PlacePurchaseOrder(PurchaseOrder po)
-        {
-            if (po == null) throw new ArgumentNullException("po");
-            po.Validate();
-
-            // Посчитаем стоимость по текущему каталогу
-            decimal total = 0m;
-            foreach (var kv in po.Items)
-            {
-                var part = PartsCatalog.FirstOrDefault(p => p.Id == kv.Key);
-                if (part == null) throw new InvalidOperationException("Указанная деталь не найдена в каталоге");
-                total += part.Price * kv.Value;
-            }
-
-            if (total > Balance) throw new InvalidOperationException("Недостаточно средств для размещения заказа");
-
-            Balance -= total;
-            po.TotalCost = total;
-            po.PlacedAtClientCounter = ServedClientsCounter;
-            po.IsDelivered = false;
-
-            IncomingPurchases.Add(po);
-            Console.WriteLine($"Заказ поставщика размещён на сумму {total} ₽. Баланс: {Balance} ₽");
-        }
-
-        public void CheckAndDeliverPurchases()
-        {
-            var toDeliver = IncomingPurchases.Where(x => !x.IsDelivered && (ServedClientsCounter - x.PlacedAtClientCounter) >= x.ArrivesAfterClients).ToList();
-            foreach (var po in toDeliver)
-            {
-                foreach (var kv in po.Items)
-                {
-                    ReceiveParts(kv.Key, kv.Value);
-                }
-                po.IsDelivered = true;
-                Console.WriteLine($"Поставка #{po.Id} доставлена (через {po.ArrivesAfterClients} клиентов)");
-            }
-        }
-
-        public bool HasPart(int partId, int quantity = 1)
-        {
-            var entry = Inventory.FirstOrDefault(i => i.PartId == partId);
-            return entry != null && entry.Quantity >= quantity;
-        }
-
-        public void ConsumePart(int partId, int quantity = 1)
-        {
-            var entry = Inventory.FirstOrDefault(i => i.PartId == partId);
-            if (entry == null) throw new InvalidOperationException("Деталь не найдена на складе");
-            if (entry.Quantity < quantity) throw new InvalidOperationException("Недостаточно деталей на складе");
-            entry.Quantity -= quantity;
-        }
-
-        public void ReceiveParts(int partId, int quantity)
-        {
-            var entry = Inventory.FirstOrDefault(i => i.PartId == partId);
-            if (entry == null)
-            {
-                var part = PartsCatalog.FirstOrDefault(p => p.Id == partId);
-                if (part == null) throw new InvalidOperationException("Деталь не найдена в каталоге при доставке");
-                entry = new InventoryEntry { PartId = partId, Part = part, Quantity = quantity };
-                Inventory.Add(entry);
-            }
-            else
-            {
-                entry.Quantity += quantity;
-            }
-        }
-
-        public void RefuseClient(RepairOrder order)
-        {
-            // Наказание за отказ: штраф равен проценту от стоимости заказа
-            var penalty = order.TotalCost * RefusalPenaltyPercent;
-            Balance -= penalty;
-            order.Status = RepairStatus.Refused;
-            Console.WriteLine($"Клиенту отказано. Штраф: {penalty} ₽. Баланс: {Balance} ₽");
-        }
-
-        public IEnumerable<InventoryEntry> GetInventory() { return Inventory; }
-    }
 
     public static class Program
     {
+        private static Marketplace _mp = new Marketplace();
+        private static User _currentUser = null;
+
         public static void Main(string[] args)
         {
-            var svc = new AutoService(10000m);
-            SeedData(svc);
-            RunMenu(svc);
+            Console.WriteLine("GMWOG Marketplace — консольная версия (Практическая №8)");
+            RunMainMenu();
         }
 
-        private static void SeedData(AutoService svc)
-        {
-            // Parts catalog
-            svc.PartsCatalog.Add(new Part { Id = 1, Name = "Фильтр масляный", Category = PartCategory.Other, Price = 15.50m });
-            svc.PartsCatalog.Add(new Part { Id = 2, Name = "Фильтр воздушный", Category = PartCategory.Other, Price = 20.00m });
-            svc.PartsCatalog.Add(new Part { Id = 3, Name = "Тормозная колодка (пара)", Category = PartCategory.Brake, Price = 45.00m });
-            svc.PartsCatalog.Add(new Part { Id = 4, Name = "Свеча зажигания", Category = PartCategory.Electrical, Price = 8.00m });
-            svc.PartsCatalog.Add(new Part { Id = 5, Name = "Ремень ГРМ", Category = PartCategory.Engine, Price = 120.00m });
-
-            // Inventory
-            svc.Inventory.Add(new InventoryEntry { Id = 1, PartId = 1, Part = svc.PartsCatalog.First(p => p.Id == 1), Quantity = 5 });
-            svc.Inventory.Add(new InventoryEntry { Id = 2, PartId = 2, Part = svc.PartsCatalog.First(p => p.Id == 2), Quantity = 3 });
-            svc.Inventory.Add(new InventoryEntry { Id = 3, PartId = 3, Part = svc.PartsCatalog.First(p => p.Id == 3), Quantity = 10 });
-            svc.Inventory.Add(new InventoryEntry { Id = 4, PartId = 4, Part = svc.PartsCatalog.First(p => p.Id == 4), Quantity = 20 });
-            svc.Inventory.Add(new InventoryEntry { Id = 5, PartId = 5, Part = svc.PartsCatalog.First(p => p.Id == 5), Quantity = 1 });
-
-            // Clients & Cars
-            var client = new Client { Id = 1, FullName = "Иванов Иван", Email = "ivanov@example.com", Phone = "+7-900-000-0000" };
-            var car = new Car { Id = 1, ClientId = 1, Owner = client, Model = "Lada Vesta", VIN = "X1Y2Z3VINEX", Year = 2018 };
-            client.Cars.Add(car);
-            svc.Clients.Add(client);
-
-            // Mechanic
-            svc.Mechanics.Add(new Mechanic { Id = 1, Name = "Петров Сергей", HourlyRate = 800m });
-
-            Console.WriteLine("Сеанс инициализирован: добавлены справочники (Parts, Inventory, Clients, Mechanics)");
-        }
-
-        private static void RunMenu(AutoService svc)
+        private static void RunMainMenu()
         {
             while (true)
             {
                 Console.WriteLine();
-                Console.WriteLine("=== AutoService Menu ===");
-                Console.WriteLine("1) Показать склад");
-                Console.WriteLine("2) Показать каталог запчастей");
-                Console.WriteLine("3) Показать клиентов");
-                Console.WriteLine("4) Добавить заказ (клиент)");
-                Console.WriteLine("5) Обработать следующего клиента");
-                Console.WriteLine("6) Разместить заказ у поставщика");
-                Console.WriteLine("7) Показать ожидаемые поставки");
-                Console.WriteLine("8) Показать баланс");
+                Console.WriteLine("=== Главное меню ===");
+                Console.WriteLine("1) Просмотреть товары (без входа)");
+                Console.WriteLine("2) Регистрация");
+                Console.WriteLine("3) Вход в аккаунт");
+                Console.WriteLine("4) Личный кабинет (только после входа)");
                 Console.WriteLine("0) Выход");
                 Console.Write("Выберите действие: ");
-                var line = Console.ReadLine();
-                int choice;
-                if (!int.TryParse(line, out choice)) { Console.WriteLine("Неверный ввод"); continue; }
+                var line = Console.ReadLine(); int choice; if (!int.TryParse(line, out choice)) { Console.WriteLine("Неверный ввод"); continue; }
 
                 try
                 {
                     switch (choice)
                     {
-                        case 1: ShowInventory(svc); break;
-                        case 2: ShowCatalog(svc); break;
-                        case 3: ShowClients(svc); break;
-                        case 4: CreateOrderInteractive(svc); break;
-                        case 5: svc.ProcessNextClient(); break;
-                        case 6: CreatePurchaseOrderInteractive(svc); break;
-                        case 7: ShowIncomingPurchases(svc); break;
-                        case 8: Console.WriteLine($"Баланс: {svc.Balance} ₽"); break;
+                        case 1: ShowProducts(); break;
+                        case 2: RegisterInteractive(); break;
+                        case 3: LoginInteractive(); break;
+                        case 4: PersonalMenu(); break;
                         case 0: return;
                         default: Console.WriteLine("Неизвестный пункт меню"); break;
                     }
@@ -427,114 +165,155 @@ namespace AutoServicePr7
             }
         }
 
-        private static void ShowInventory(AutoService svc)
+        private static void ShowProducts()
         {
-            Console.WriteLine("Склад:");
-            foreach (var e in svc.GetInventory())
+            Console.WriteLine("Список товаров:");
+            foreach (var p in _mp.Products)
             {
-                Console.WriteLine($"PartId={e.PartId} Name={e.Part.Name} Qty={e.Quantity} Price={e.Part.Price}");
+                Console.WriteLine($"Id={p.Id} {p.Name} — {p.Price} ₽ — В наличии: {p.Stock}\n  {p.Description}");
             }
         }
 
-        private static void ShowCatalog(AutoService svc)
+        private static void RegisterInteractive()
         {
-            Console.WriteLine("Каталог запчастей:");
-            foreach (var p in svc.PartsCatalog)
+            Console.WriteLine("== Регистрация ==");
+            Console.Write("Логин: "); var login = Console.ReadLine();
+            Console.Write("Email (опционально): "); var email = Console.ReadLine();
+            Console.Write("Пароль: "); var pwd = ReadPassword();
+            Console.Write("Подтвердите пароль: "); var pwd2 = ReadPassword();
+
+            try
             {
-                Console.WriteLine($"Id={p.Id} Name={p.Name} Price={p.Price}");
+                var user = _mp.RegisterUser(login, pwd, pwd2, email);
+                Console.WriteLine("Регистрация прошла успешно. Вы вошли в систему.");
+                _currentUser = user;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Не удалось зарегистрироваться: " + ex.Message);
             }
         }
 
-        private static void ShowClients(AutoService svc)
+        private static void LoginInteractive()
         {
-            Console.WriteLine("Клиенты:");
-            foreach (var c in svc.Clients)
+            Console.WriteLine("== Вход ==");
+            Console.Write("Логин: "); var login = Console.ReadLine();
+            Console.Write("Пароль: "); var pwd = ReadPassword();
+            try
             {
-                Console.WriteLine($"Id={c.Id} Name={c.FullName} Cars={c.Cars.Count}");
-                foreach (var car in c.Cars) Console.WriteLine($"  CarId={car.Id} Model={car.Model} VIN={car.VIN}");
+                var user = _mp.Login(login, pwd);
+                Console.WriteLine("Вход выполнен. Привет, " + user.Username);
+                _currentUser = user;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Не удалось войти: " + ex.Message);
             }
         }
 
-        private static void CreateOrderInteractive(AutoService svc)
+        private static void PersonalMenu()
         {
-            Console.Write("Введите Id клиента (например 1): ");
-            var s = Console.ReadLine(); int cid; if (!int.TryParse(s, out cid)) { Console.WriteLine("Неверно"); return; }
-            var client = svc.Clients.FirstOrDefault(c => c.Id == cid);
-            if (client == null) { Console.WriteLine("Клиент не найден"); return; }
-            if (client.Cars.Count == 0) { Console.WriteLine("У клиента нет машин"); return; }
-            var car = client.Cars[0];
-
-            Console.WriteLine("Выберите Id детали из каталога (введите 0, если ремонт без замены детали): ");
-            ShowCatalog(svc);
-            s = Console.ReadLine(); int pid; if (!int.TryParse(s, out pid)) { Console.WriteLine("Неверно"); return; }
-            int? reqPartId = null; Part part = null;
-            decimal partCost = 0m;
-            if (pid != 0)
+            if (_currentUser == null) { Console.WriteLine("Сначала войдите в аккаунт"); return; }
+            while (true)
             {
-                part = svc.PartsCatalog.FirstOrDefault(p => p.Id == pid);
-                if (part == null) { Console.WriteLine("Деталь не найдена"); return; }
-                reqPartId = pid;
-                partCost = part.Price;
+                Console.WriteLine();
+                Console.WriteLine("=== Личный кабинет ===");
+                Console.WriteLine("1) Посмотреть корзину");
+                Console.WriteLine("2) Добавить товар в корзину");
+                Console.WriteLine("3) Оформить покупку отдельного товара");
+                Console.WriteLine("4) Оформить покупку корзины");
+                Console.WriteLine("5) История заказов (сортировка по дате)");
+                Console.WriteLine("9) Выйти из аккаунта");
+                Console.WriteLine("0) Назад");
+                Console.Write("Выберите: "); var line = Console.ReadLine(); int ch; if (!int.TryParse(line, out ch)) { Console.WriteLine("Неверный ввод"); continue; }
+                try
+                {
+                    switch (ch)
+                    {
+                        case 1: ShowCart(); break;
+                        case 2: AddToCartInteractive(); break;
+                        case 3: CheckoutSingleInteractive(); break;
+                        case 4: CheckoutCartInteractive(); break;
+                        case 5: ShowOrderHistory(); break;
+                        case 9: _currentUser = null; Console.WriteLine("Вы вышли из аккаунта"); return;
+                        case 0: return;
+                        default: Console.WriteLine("Неизвестный пункт"); break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Ошибка: " + ex.Message);
+                }
             }
-
-            Console.Write("Введите стоимость работы (labor), например 500: ");
-            s = Console.ReadLine(); decimal labor; if (!decimal.TryParse(s, out labor)) { Console.WriteLine("Неверно"); return; }
-            if (labor < 0) { Console.WriteLine("Labor не может быть отрицательной"); return; }
-
-            var order = new RepairOrder
-            {
-                Id = svc.OrdersHistory.Count + svc.ClientQueue.Count + 1,
-                ClientId = client.Id,
-                Client = client,
-                CarId = car.Id,
-                Car = car,
-                RequiredPartId = reqPartId,
-                RequiredPart = (part == null ? new Part() : part),
-                LaborCost = labor,
-                PartCost = partCost,
-                TotalCost = labor + partCost,
-                Status = RepairStatus.Pending
-            };
-
-            svc.EnqueueClient(order);
-            Console.WriteLine($"Заказ добавлен в очередь. ID={order.Id} TotalCost={order.TotalCost}");
         }
 
-        private static void CreatePurchaseOrderInteractive(AutoService svc)
+        private static void ShowCart()
         {
-            var po = new PurchaseOrder();
-            Console.WriteLine("Создание заказа поставки. Введите пары PartId:Quantity (в строку через запятую), например: 1:5,3:2");
-            ShowCatalog(svc);
-            Console.Write("Ввод: ");
-            var line = Console.ReadLine();
-            if (string.IsNullOrWhiteSpace(line)) { Console.WriteLine("Пустой ввод"); return; }
-            var pairs = line.Split(',');
-            foreach (var pair in pairs)
-            {
-                var kv = pair.Split(':');
-                if (kv.Length != 2) { Console.WriteLine("Неверный формат пары"); return; }
-                int pid; int qty;
-                if (!int.TryParse(kv[0].Trim(), out pid) || !int.TryParse(kv[1].Trim(), out qty)) { Console.WriteLine("Неверные числа"); return; }
-                po.Items[pid] = qty;
-            }
-
-            Console.Write("Через сколько клиентов доставить? (по умолчанию 2): ");
-            var s = Console.ReadLine(); int arr;
-            if (!int.TryParse(s, out arr)) arr = 2;
-            po.ArrivesAfterClients = arr;
-
-            // Попробуем разместить заказ
-            svc.PlacePurchaseOrder(po);
-            Console.WriteLine("Заказ у поставщика размещён.");
+            Console.WriteLine("=== Корзина ===");
+            var cart = _currentUser.Cart;
+            if (cart.Items.Count == 0) { Console.WriteLine("Корзина пуста"); return; }
+            foreach (var it in cart.Items) Console.WriteLine($"{it.Product.Name} x{it.Quantity} = {it.Product.Price * it.Quantity} ₽");
+            Console.WriteLine("Итог: " + cart.TotalAmount() + " ₽");
         }
 
-        private static void ShowIncomingPurchases(AutoService svc)
+        private static void AddToCartInteractive()
         {
-            Console.WriteLine("Ожидаемые поставки:");
-            foreach (var po in svc.IncomingPurchases)
+            ShowProducts();
+            Console.Write("Введите Id товара: "); var s = Console.ReadLine(); int pid; if (!int.TryParse(s, out pid)) { Console.WriteLine("Неверный Id"); return; }
+            Console.Write("Введите количество: "); s = Console.ReadLine(); int qty; if (!int.TryParse(s, out qty)) { Console.WriteLine("Неверное число"); return; }
+            _mp.AddProductToCart(_currentUser, pid, qty);
+            Console.WriteLine("Добавлено в корзину");
+        }
+
+        private static void CheckoutSingleInteractive()
+        {
+            ShowProducts();
+            Console.Write("Введите Id товара: "); var s = Console.ReadLine(); int pid; if (!int.TryParse(s, out pid)) { Console.WriteLine("Неверный Id"); return; }
+            Console.Write("Введите количество: "); s = Console.ReadLine(); int qty; if (!int.TryParse(s, out qty)) { Console.WriteLine("Неверное число"); return; }
+            ShowPVZs(); Console.Write("Выберите Id ПВЗ: "); s = Console.ReadLine(); int pvz; if (!int.TryParse(s, out pvz)) { Console.WriteLine("Неверный Id"); return; }
+            var order = _mp.CheckoutSingle(_currentUser, pid, qty, pvz);
+            Console.WriteLine("Оформлен заказ Id=" + order.Id + " Сумма=" + order.Total + " ₽");
+        }
+
+        private static void CheckoutCartInteractive()
+        {
+            ShowCart();
+            ShowPVZs(); Console.Write("Выберите Id ПВЗ: "); var s = Console.ReadLine(); int pvz; if (!int.TryParse(s, out pvz)) { Console.WriteLine("Неверный Id"); return; }
+            var order = _mp.CheckoutCart(_currentUser, pvz);
+            Console.WriteLine("Оформлен заказ Id=" + order.Id + " Сумма=" + order.Total + " ₽");
+        }
+
+        private static void ShowOrderHistory()
+        {
+            Console.WriteLine("Показать заказы: 1) Сначала новые  2) Сначала старые"); var s = Console.ReadLine(); bool newest = s == "1";
+            var list = _mp.GetOrdersForUser(_currentUser.Id, newest);
+            if (list.Count == 0) { Console.WriteLine("Заказов нет"); return; }
+            foreach (var o in list)
             {
-                Console.WriteLine($"PO Id={po.Id} PlacedAt={po.PlacedAtClientCounter} ArrivesAfter={po.ArrivesAfterClients} Delivered={po.IsDelivered} TotalCost={po.TotalCost}");
+                Console.WriteLine($"OrderId={o.Id} Date={o.CreatedAt} Total={o.Total} ₽ PVZ={o.PVZId}");
+                foreach (var it in o.Items) Console.WriteLine($"  {it.Product.Name} x{it.Quantity} = {it.Product.Price * it.Quantity} ₽");
             }
+        }
+
+        private static void ShowPVZs()
+        {
+            Console.WriteLine("Доступные ПВЗ:");
+            foreach (var p in _mp.PVZs) Console.WriteLine($"Id={p.Id} {p.Name} — {p.Address}");
+        }
+
+        private static string ReadPassword()
+        {
+            var pwd = string.Empty;
+            while (true)
+            {
+                var key = Console.ReadKey(true);
+                if (key.Key == ConsoleKey.Enter) break;
+                if (key.Key == ConsoleKey.Backspace && pwd.Length > 0) { pwd = pwd.Substring(0, pwd.Length - 1); Console.Write("\b \b"); }
+                else if (key.Key != ConsoleKey.Backspace) { pwd += key.KeyChar; Console.Write("*"); }
+            }
+            Console.WriteLine();
+            return pwd;
         }
     }
+
 }

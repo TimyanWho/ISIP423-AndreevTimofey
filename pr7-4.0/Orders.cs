@@ -12,12 +12,23 @@ namespace pr7_4._0
     using System;
     using System.Collections.Generic;
     
-    public partial class Inventory
+    public partial class Orders
     {
-        public int Id { get; set; }
-        public int PartId { get; set; }
-        public int Quantity { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
+        public Orders()
+        {
+            this.OrderItems = new HashSet<OrderItems>();
+        }
     
-        public virtual Parts Parts { get; set; }
+        public int Id { get; set; }
+        public int UserId { get; set; }
+        public int PVZId { get; set; }
+        public decimal Total { get; set; }
+        public System.DateTime CreatedAt { get; set; }
+    
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<OrderItems> OrderItems { get; set; }
+        public virtual PVZs PVZs { get; set; }
+        public virtual Users Users { get; set; }
     }
 }

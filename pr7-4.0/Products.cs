@@ -12,19 +12,24 @@ namespace pr7_4._0
     using System;
     using System.Collections.Generic;
     
-    public partial class Mechanics
+    public partial class Products
     {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
-        public Mechanics()
+        public Products()
         {
-            this.RepairOrders = new HashSet<RepairOrders>();
+            this.CartItems = new HashSet<CartItems>();
+            this.OrderItems = new HashSet<OrderItems>();
         }
     
         public int Id { get; set; }
         public string Name { get; set; }
-        public decimal HourlyRate { get; set; }
+        public string Description { get; set; }
+        public decimal Price { get; set; }
+        public int Stock { get; set; }
     
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<RepairOrders> RepairOrders { get; set; }
+        public virtual ICollection<CartItems> CartItems { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<OrderItems> OrderItems { get; set; }
     }
 }

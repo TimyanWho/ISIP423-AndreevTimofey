@@ -4,25 +4,20 @@
   <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
     <!-- Diagram content (shape and connector positions) -->
     <edmx:Diagrams>
-      <Diagram DiagramId="fccbd798ea934e5e9b8a16c652624ed0" Name="Diagram1">
-        <EntityTypeShape EntityType="AutoServiceDBModel.Cars" Width="1.5" PointX="3.75" PointY="9.5" IsExpanded="true" />
-        <EntityTypeShape EntityType="AutoServiceDBModel.Clients" Width="1.5" PointX="1.5" PointY="9.625" IsExpanded="true" />
-        <EntityTypeShape EntityType="AutoServiceDBModel.Inventory" Width="1.5" PointX="3" PointY="5.125" IsExpanded="true" />
-        <EntityTypeShape EntityType="AutoServiceDBModel.Mechanics" Width="1.5" PointX="3.75" PointY="12.625" IsExpanded="true" />
-        <EntityTypeShape EntityType="AutoServiceDBModel.Parts" Width="1.5" PointX="0.75" PointY="4.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="AutoServiceDBModel.PurchaseOrderItems" Width="1.5" PointX="3" PointY="1.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="AutoServiceDBModel.PurchaseOrders" Width="1.5" PointX="0.75" PointY="0.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="AutoServiceDBModel.RepairOrders" Width="1.5" PointX="6" PointY="4.125" IsExpanded="true" />
-        <EntityTypeShape EntityType="AutoServiceDBModel.Settings" Width="1.5" PointX="5.75" PointY="0.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="AutoServiceDBModel.sysdiagrams" Width="1.5" PointX="7.75" PointY="0.75" IsExpanded="true" />
-        <AssociationConnector Association="AutoServiceDBModel.FK_Cars_Client" ManuallyRouted="false" />
-        <AssociationConnector Association="AutoServiceDBModel.FK_Repair_Car" ManuallyRouted="false" />
-        <AssociationConnector Association="AutoServiceDBModel.FK_Repair_Client" ManuallyRouted="false" />
-        <AssociationConnector Association="AutoServiceDBModel.FK_Inventory_Part" ManuallyRouted="false" />
-        <AssociationConnector Association="AutoServiceDBModel.FK_Repair_Mech" ManuallyRouted="false" />
-        <AssociationConnector Association="AutoServiceDBModel.FK_POI_Part" ManuallyRouted="false" />
-        <AssociationConnector Association="AutoServiceDBModel.FK_Repair_Part" ManuallyRouted="false" />
-        <AssociationConnector Association="AutoServiceDBModel.FK_POI_PO" ManuallyRouted="false" />
+      <Diagram DiagramId="5421212946de4d2d8f0f9ff30cbdba93" Name="Diagram1">
+        <EntityTypeShape EntityType="MarketplaceDBModel.CartItems" Width="1.5" PointX="3" PointY="3.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="MarketplaceDBModel.OrderItems" Width="1.5" PointX="8.25" PointY="3.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="MarketplaceDBModel.Orders" Width="1.5" PointX="6" PointY="3.375" IsExpanded="true" />
+        <EntityTypeShape EntityType="MarketplaceDBModel.Products" Width="1.5" PointX="0.75" PointY="8.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="MarketplaceDBModel.PVZs" Width="1.5" PointX="3.75" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="MarketplaceDBModel.sysdiagrams" Width="1.5" PointX="2.75" PointY="7.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="MarketplaceDBModel.Users" Width="1.5" PointX="0.75" PointY="3.5" IsExpanded="true" />
+        <AssociationConnector Association="MarketplaceDBModel.FK_CartItems_Product" ManuallyRouted="false" />
+        <AssociationConnector Association="MarketplaceDBModel.FK_CartItems_User" ManuallyRouted="false" />
+        <AssociationConnector Association="MarketplaceDBModel.FK_OrderItems_Order" ManuallyRouted="false" />
+        <AssociationConnector Association="MarketplaceDBModel.FK_OrderItems_Product" ManuallyRouted="false" />
+        <AssociationConnector Association="MarketplaceDBModel.FK_Orders_PVZ" ManuallyRouted="false" />
+        <AssociationConnector Association="MarketplaceDBModel.FK_Orders_User" ManuallyRouted="false" />
       </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>

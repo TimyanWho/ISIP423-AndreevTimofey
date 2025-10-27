@@ -12,22 +12,15 @@ namespace pr7_4._0
     using System;
     using System.Collections.Generic;
     
-    public partial class RepairOrders
+    public partial class CartItems
     {
         public int Id { get; set; }
-        public int ClientId { get; set; }
-        public int CarId { get; set; }
-        public Nullable<int> RequiredPartId { get; set; }
-        public Nullable<int> MechanicId { get; set; }
-        public decimal LaborCost { get; set; }
-        public decimal PartCost { get; set; }
-        public decimal TotalCost { get; set; }
-        public int Status { get; set; }
-        public System.DateTime CreatedAt { get; set; }
+        public int UserId { get; set; }
+        public int ProductId { get; set; }
+        public int Quantity { get; set; }
+        public System.DateTime AddedAt { get; set; }
     
-        public virtual Cars Cars { get; set; }
-        public virtual Clients Clients { get; set; }
-        public virtual Mechanics Mechanics { get; set; }
-        public virtual Parts Parts { get; set; }
+        public virtual Products Products { get; set; }
+        public virtual Users Users { get; set; }
     }
 }

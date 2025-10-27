@@ -8,6 +8,6 @@ namespace pr7_4._0
 {
     internal class Core
     {
-        public static AutoServiceDBEntities Context = new AutoServiceDBEntities();
+        public static MarketplaceDBEntities Context = new MarketplaceDBEntities();
     }
 }

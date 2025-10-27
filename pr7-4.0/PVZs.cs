@@ -12,23 +12,19 @@ namespace pr7_4._0
     using System;
     using System.Collections.Generic;
     
-    public partial class Clients
+    public partial class PVZs
     {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
-        public Clients()
+        public PVZs()
         {
-            this.Cars = new HashSet<Cars>();
-            this.RepairOrders = new HashSet<RepairOrders>();
+            this.Orders = new HashSet<Orders>();
         }
     
         public int Id { get; set; }
-        public string FullName { get; set; }
-        public string Email { get; set; }
-        public string Phone { get; set; }
+        public string Name { get; set; }
+        public string Address { get; set; }
     
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<Cars> Cars { get; set; }
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<RepairOrders> RepairOrders { get; set; }
+        public virtual ICollection<Orders> Orders { get; set; }
     }
 }

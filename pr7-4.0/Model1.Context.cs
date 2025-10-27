@@ -13,10 +13,10 @@ namespace pr7_4._0
     using System.Data.Entity;
     using System.Data.Entity.Infrastructure;
     
-    public partial class AutoServiceDBEntities : DbContext
+    public partial class MarketplaceDBEntities : DbContext
     {
-        public AutoServiceDBEntities()
-            : base("name=AutoServiceDBEntities")
+        public MarketplaceDBEntities()
+            : base("name=MarketplaceDBEntities")
         {
         }
     
@@ -25,15 +25,12 @@ namespace pr7_4._0
             throw new UnintentionalCodeFirstException();
         }
     
-        public virtual DbSet<Cars> Cars { get; set; }
-        public virtual DbSet<Clients> Clients { get; set; }
-        public virtual DbSet<Inventory> Inventory { get; set; }
-        public virtual DbSet<Mechanics> Mechanics { get; set; }
-        public virtual DbSet<Parts> Parts { get; set; }
-        public virtual DbSet<PurchaseOrderItems> PurchaseOrderItems { get; set; }
-        public virtual DbSet<PurchaseOrders> PurchaseOrders { get; set; }
-        public virtual DbSet<RepairOrders> RepairOrders { get; set; }
-        public virtual DbSet<Settings> Settings { get; set; }
+        public virtual DbSet<CartItems> CartItems { get; set; }
+        public virtual DbSet<OrderItems> OrderItems { get; set; }
+        public virtual DbSet<Orders> Orders { get; set; }
+        public virtual DbSet<Products> Products { get; set; }
+        public virtual DbSet<PVZs> PVZs { get; set; }
         public virtual DbSet<sysdiagrams> sysdiagrams { get; set; }
+        public virtual DbSet<Users> Users { get; set; }
     }
 }

@@ -12,10 +12,15 @@ namespace pr7_4._0
     using System;
     using System.Collections.Generic;
     
-    public partial class Settings
+    public partial class OrderItems
     {
         public int Id { get; set; }
-        public decimal Balance { get; set; }
-        public System.DateTime CreatedAt { get; set; }
+        public int OrderId { get; set; }
+        public int ProductId { get; set; }
+        public int Quantity { get; set; }
+        public decimal UnitPrice { get; set; }
+    
+        public virtual Orders Orders { get; set; }
+        public virtual Products Products { get; set; }
     }
 }
