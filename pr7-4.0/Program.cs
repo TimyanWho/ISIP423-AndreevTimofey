@@ -118,7 +118,144 @@ namespace MarketplacePr8
 
     #endregion
 
-   
+    #region Marketplace Core (in-memory)
+
+    public class Marketplace
+    {
+        public List<User> Users { get; private set; }
+        public List<Product> Products { get; private set; }
+        public List<PVZ> PVZs { get; private set; }
+        public List<Order> Orders { get; private set; }
+
+        private int _userIdSeq = 1;
+        private int _orderIdSeq = 1;
+
+        public Marketplace()
+        {
+            Users = new List<User>();
+            Products = new List<Product>();
+            PVZs = new List<PVZ>();
+            Orders = new List<Order>();
+
+            Seed();
+        }
+        public User RegisterUser(string username, string password, string passwordConfirm, string email)
+        {
+            if (string.IsNullOrWhiteSpace(username)) throw new ArgumentException("Username пустой");
+            if (password == null) throw new ArgumentException("Password пустой");
+            if (password != passwordConfirm) throw new ArgumentException("Пароли не совпадают");
+            if (Users.Any(u => u.Username.Equals(username, StringComparison.OrdinalIgnoreCase))) throw new InvalidOperationException("Пользователь с таким именем уже существует");
+
+            var user = new User { Id = _userIdSeq++, Username = username, PasswordHash = HashPwd(password), Email = email };
+            user.ValidateForRegistration();
+            Users.Add(user);
+            return user;
+        }
+
+        public User Login(string username, string password)
+        {
+            var user = Users.FirstOrDefault(u => u.Username.Equals(username, StringComparison.OrdinalIgnoreCase));
+            if (user == null) throw new InvalidOperationException("Пользователь не найден");
+            if (user.PasswordHash != HashPwd(password)) throw new InvalidOperationException("Неверный пароль");
+            return user;
+        }
+
+        public void AddProductToCart(User user, int productId, int quantity)
+        {
+            if (user == null) throw new ArgumentNullException("user");
+            var pr = Products.FirstOrDefault(p => p.Id == productId);
+            if (pr == null) throw new InvalidOperationException("Товар не найден");
+            if (quantity <= 0) throw new ArgumentException("Quantity должен быть положительным");
+            if (pr.Stock < quantity) throw new InvalidOperationException("Недостаточно товара на складе");
+
+            var exist = user.Cart.Items.FirstOrDefault(i => i.ProductId == productId);
+            if (exist != null)
+            {
+                exist.Quantity += quantity;
+            }
+            else
+            {
+                user.Cart.Items.Add(new CartItem { ProductId = productId, Product = pr, Quantity = quantity });
+            }
+        }
+
+        public Order CheckoutSingle(User user, int productId, int quantity, int pvzId)
+        {
+            if (user == null) throw new ArgumentNullException("user");
+            var pr = Products.FirstOrDefault(p => p.Id == productId);
+            if (pr == null) throw new InvalidOperationException("Товар не найден");
+            if (quantity <= 0) throw new ArgumentException("Quantity должен быть положительным");
+            if (pr.Stock < quantity) throw new InvalidOperationException("Недостаточно товара на складе");
+
+            pr.Stock -= quantity;
+
+            var order = new Order { Id = _orderIdSeq++, UserId = user.Id, PVZId = pvzId, CreatedAt = DateTime.UtcNow };
+            order.Items.Add(new CartItem { ProductId = pr.Id, Product = pr, Quantity = quantity });
+            order.Total = pr.Price * quantity;
+
+            Orders.Add(order);
+            user.Orders.Add(order);
+
+            return order;
+        }
+
+        public Order CheckoutCart(User user, int pvzId)
+        {
+            if (user == null) throw new ArgumentNullException("user");
+            if (user.Cart.Items.Count == 0) throw new InvalidOperationException("Корзина пуста");
+
+            foreach (var it in user.Cart.Items)
+            {
+                var pr = Products.FirstOrDefault(p => p.Id == it.ProductId);
+                if (pr == null) throw new InvalidOperationException("Товар в корзине не найден");
+                if (pr.Stock < it.Quantity) throw new InvalidOperationException("Недостаточно товара на складе для " + pr.Name);
+            }
+
+            var order = new Order { Id = _orderIdSeq++, UserId = user.Id, PVZId = pvzId, CreatedAt = DateTime.UtcNow };
+            decimal total = 0m;
+            foreach (var it in user.Cart.Items)
+            {
+                var pr = Products.First(p => p.Id == it.ProductId);
+                pr.Stock -= it.Quantity;
+                order.Items.Add(new CartItem { ProductId = pr.Id, Product = pr, Quantity = it.Quantity });
+                total += pr.Price * it.Quantity;
+            }
+            order.Total = total;
+
+            Orders.Add(order);
+            user.Orders.Add(order);
+
+            user.Cart.Items.Clear();
+
+            return order;
+        }
+
+        public List<Order> GetOrdersForUser(int userId, bool newestFirst)
+        {
+            var list = Orders.Where(o => o.UserId == userId).ToList();
+            if (newestFirst) list = list.OrderByDescending(o => o.CreatedAt).ToList(); else list = list.OrderBy(o => o.CreatedAt).ToList();
+            return list;
+        }
+
+        private static string HashPwd(string pwd)
+        {
+            if (pwd == null) return string.Empty;
+            return pwd.GetHashCode().ToString();
+        }
+
+        private void Seed()
+        {
+            Products.Add(new Product { Id = 1, Name = "Клавиатура механическая", Description = "RGB, Cherry MX", Price = 4999.00m, Stock = 10 });
+            Products.Add(new Product { Id = 2, Name = "Мышь игровая", Description = "16000 DPI", Price = 2499.00m, Stock = 20 });
+            Products.Add(new Product { Id = 3, Name = "Коврик для мыши", Description = "Большой, тканевый", Price = 799.00m, Stock = 50 });
+
+            PVZs.Add(new PVZ { Id = 1, Name = "ПВЗ - Центральный", Address = "ул. Ленина 1" });
+            PVZs.Add(new PVZ { Id = 2, Name = "ПВЗ - Северный", Address = "ул. Садовая 10" });
+            PVZs.Add(new PVZ { Id = 3, Name = "ПВЗ - Юго-Восточный", Address = "ул. Восточная 23" });
+        }
+    }
+
+    #endregion
 
 
     public static class Program
