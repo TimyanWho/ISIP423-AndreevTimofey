@@ -6,7 +6,11 @@ using System.Threading.Tasks;
 
 namespace ISIP423_AndreevTimofey
 {
-    internal class FileName
+    namespace ConsoleTwin
     {
+        abstract class Item
+        {
+            public string Name { get; protected set; }
+        }
     }
 }
