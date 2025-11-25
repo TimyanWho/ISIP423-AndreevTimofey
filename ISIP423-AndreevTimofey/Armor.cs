@@ -16,7 +16,6 @@ namespace ISIP423_AndreevTimofey
                 Name = name;
                 Defense = def;
             }
-            public override string ToString() => $"Доспех twin: {Name} (Защита {Defense}) twin";
         }
     }
 }

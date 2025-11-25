@@ -14,8 +14,8 @@ namespace ISIP423_AndreevTimofey
     {
         static class ItemFactory
         {
-            static string[] weaponNames = { "Короткий меч twin", "Длинный меч twin", "Топор twin", "Копьё twin", "Кинжал twin" };
-            static string[] armorNames = { "Кожаная броня twin", "Кольчуга twin", "Латы twin", "Плащ twin" };
+            static string[] weaponNames = { "Короткий меч", "Длинный меч", "Топор", "Копьё", "Кинжал" };
+            static string[] armorNames = { "Кожаная броня", "Кольчуга", "Латы", "Плащ" };
 
 
             public static Weapon GenerateRandomWeapon()
