@@ -6,47 +6,100 @@ using System.Threading.Tasks;
 
 namespace ISIP423_AndreevTimofey
 {
-    namespace ConsoleTwin { 
-
-
-class BossMage : Mage
+    namespace ConsoleTwin
     {
-        public BossMage()
+        static class BossFactory
         {
-            Name = "Архимаг twin";
-            MaxHP = HP = (int)Math.Round(28 * 1.8);
-            Attack = (int)Math.Round(7 * 1.6);
-            Defense = (int)Math.Round(3 * 1.1);
-            FreezeChance = 0.30;
+            public static Enemy CreateGoblinBoss()
+            {
+                var g = new BossGoblin();
+                return g;
+            }
+            public static Enemy CreateSkeletonBoss()
+            {
+                var s = new BossSkeleton();
+                return s;
+            }
+            public static Enemy CreateMageBoss()
+            {
+                var m = new BossMage();
+                return m;
+            }
+            public static Enemy CreateBossRyan()
+            {
+                var r = new BossRyan();
+                return r;
+            }
+            public static Enemy CreatePestovBoss()
+            {
+                var p = new BossPestov();
+                return p;
+            }
         }
-    }
 
 
-    class BossPestov : Skeleton
-    {
-        public double FreezeChance { get; private set; }
-        public BossPestov()
+        // Bosses
+        class BossGoblin : Goblin
         {
-            Name = "Пестов twin";
-            MaxHP = HP = (int)Math.Round(35 * 1.3);
-            Attack = (int)Math.Round(10 * 1.8);
-            Defense = (int)Math.Round(4 * 0.6);
-            IgnoresPlayerDefense = true;
-            FreezeChance = 0.35;
+            public BossGoblin()
+            {
+                Name = "ВВГ (Вождь гоблинов)";
+                MaxHP = HP = (int)Math.Round(30 * 2.0);
+                Attack = (int)Math.Round(8 * 1.5);
+                Defense = (int)Math.Round(2 * 1.2);
+                CritChance = 0.25;
+            }
         }
-    }
 
 
-    class BossRyan : Mage
-    {
-        public BossRyan()
+        class BossSkeleton : Skeleton
         {
-            Name = "Ryan Gosling twin";
-            MaxHP = HP = (int)Math.Round(28 * 2.0);
-            Attack = (int)Math.Round(7 * 2.0);
-            Defense = (int)Math.Round(3 * 2.0);
-            FreezeChance = 0.40;
+            public BossSkeleton()
+            {
+                Name = "Ковальский";
+                MaxHP = HP = (int)Math.Round(35 * 2.5);
+                Attack = (int)Math.Round(10 * 1.3);
+                Defense = (int)Math.Round(4 * 1.4);
+                IgnoresPlayerDefense = true;
+            }
         }
-    }
+
+
+        class BossMage : Mage
+        {
+            public BossMage()
+            {
+                Name = "Архимаг";
+                MaxHP = HP = (int)Math.Round(28 * 1.8);
+                Attack = (int)Math.Round(7 * 1.6);
+                Defense = (int)Math.Round(3 * 1.1);
+                FreezeChance = 0.30;
+            }
+        }
+
+
+        class BossPestov : Skeleton
+        {
+            public double FreezeChance { get; private set; }
+            public BossPestov()
+            {
+                Name = "Пестов";
+                MaxHP = HP = (int)Math.Round(35 * 1.3);
+                Attack = (int)Math.Round(10 * 1.8);
+                Defense = (int)Math.Round(4 * 0.6);
+            }
+        }
+        class BossRyan : Mage
+        {
+            public BossRyan()
+            {
+                Name = "Ryan Gosling";
+                MaxHP = HP = (int)Math.Round(28 * 2.0);
+                Attack = (int)Math.Round(7 * 2.0);
+                Defense = (int)Math.Round(3 * 2.0);
+                FreezeChance = 0.40;
+            }
+        }
     }
 }
+
