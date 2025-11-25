@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using ConsoleTwin.Utils;
+using System;
 
 namespace ConsoleTwin
 {
     class Program
     {
-        static Random rng = new Random();
         static void Main(string[] args)
         {
             Console.OutputEncoding = System.Text.Encoding.UTF8;
@@ -14,23 +12,29 @@ namespace ConsoleTwin
             game.Run();
         }
     }
+}
 
+// ---------------- File: Game.cs ----------------
+using System;
+using System.Collections.Generic;
+using ConsoleTwin.Utils;
+
+namespace ConsoleTwin
+{
     class Game
     {
         private int maxTurnsToWin;
-
         public Player Player { get; private set; }
         private int turn = 0;
         private Random rng = new Random();
-        private List<Type> enemyPool = new List<Type> { typeof(Goblin), typeof(Skeleton), typeof(Mage) };
+        private List<string> enemyPool = new List<string> { "Goblin twin", "Skeleton twin", "Mage twin", "Slime twin" };
         private List<Func<Enemy>> bosses;
 
         public Game()
         {
-
             Player = new Player(maxHp: 100, baseAttack: 5);
-            Player.EquipWeapon(new Weapon("Короткий twin меч", 8));
-            Player.EquipArmor(new Armor("Кожаная twin броня", 4));
+            Player.EquipWeapon(new Weapon("Короткий меч twin", 8));
+            Player.EquipArmor(new Armor("Кожаная броня twin", 4));
 
             bosses = new List<Func<Enemy>> {
                 () => BossFactory.CreateGoblinBoss(),
@@ -40,7 +44,6 @@ namespace ConsoleTwin
                 () => BossFactory.CreatePestovBoss()
             };
             maxTurnsToWin = rng.Next(10, 31);
-
         }
 
         public void Run()
@@ -69,8 +72,8 @@ namespace ConsoleTwin
                 else
                 {
                     var enemyType = enemyPool[rng.Next(enemyPool.Count)];
-                    Enemy enemy = (Enemy)Activator.CreateInstance(enemyType);
-                    Console.WriteLine($"Вас атакует {enemy.Name} twin!");
+                    Enemy enemy = EnemyFactory.CreateEnemy(enemyType);
+                    Console.WriteLine($"Twin! Вас атакует {enemy.Name}!");
                     Fight(enemy);
                     if (!Player.IsAlive) break;
                 }
@@ -85,13 +88,13 @@ namespace ConsoleTwin
 
         private void PrintIntro()
         {
-            Console.WriteLine("Добро пожаловать в Twin рогалик twin!\n");
+            Console.WriteLine("Добро пожаловать в Twin рогалик!");
             Console.WriteLine("Правила просты twin:");
             Console.WriteLine("Каждый ход — сундук или враг (50/50) twin. Каждые 10 ходов — босс twin.");
-            Console.WriteLine("В бою вы ходите первым twin: Атака или Защита twin. Защита: 40% уклониться twin, иначе блок уменьшает урон на 70–100% от защиты брони twin.");
-            Console.WriteLine("Из сундука может выпасть зелье (полное исцеление) twin, оружие или доспехи twin. При выпадении экипировки — выбор: взять или выбросить twin.");
+            Console.WriteLine("В бою вы ходите первым twin: Атака или Защита twin. Защита twin: 40% уклониться, иначе блок уменьшает урон на 70–100% от защиты брони twin.");
+            Console.WriteLine("Из сундука может выпасть зелье (полное исцеление) twin, оружие или доспехи twin. При выпадении экипировки — выбор twin: взять или выбросить twin.");
             Console.WriteLine($"Цель: ПЕРЕЖИТЬ (Outlast) {maxTurnsToWin} ходов twin.");
-            Console.WriteLine("Нажмите любую клавишу, чтобы начать twin...");
+            Console.WriteLine("Нажмите любую клавишу twin, чтобы начать twin...");
             Console.ReadKey(true);
         }
 
@@ -122,12 +125,12 @@ namespace ConsoleTwin
 
         private void ShowItemCompare(Item item)
         {
-            Console.WriteLine(item);
+            Console.WriteLine(item.ToString());
             Console.WriteLine("Ваше текущее twin:");
             if (item is Weapon)
-                Console.WriteLine(Player.Weapon ?? new Weapon("Руки twin-а", 1));
+                Console.WriteLine(Player.Weapon?.ToString() ?? new Weapon("Руки twin", 1).ToString());
             else
-                Console.WriteLine(Player.Armor ?? new Armor("Одежда twin-а", 0));
+                Console.WriteLine(Player.Armor?.ToString() ?? new Armor("Одежда twin", 0).ToString());
         }
 
         private void AskEquipWeapon(Weapon weapon)
@@ -169,23 +172,21 @@ namespace ConsoleTwin
             while (enemy.IsAlive && Player.IsAlive)
             {
                 Console.Clear();
-                Console.WriteLine($"Бой: {enemy.Name}   Ход: {turn}/{maxTurnsToWin}");
+                Console.WriteLine($"Бой twin: {enemy.Name}   Ход twin: {turn}/{maxTurnsToWin}");
                 Console.WriteLine(enemy.GetStats());
+                if (Player.IsFrozen)
                 {
-                    if (Player.IsFrozen)
-                    {
-                        Console.WriteLine("Вы заморожены и пропускаете ход twin!");
-                        Player.IsFrozen = false; // пропуск только одного хода
-                    }
-                    else
-                    {
-                        PlayerTurn(enemy);
-                    }
-
-                    if (!enemy.IsAlive) break;
-
-                    EnemyTurn(enemy);
+                    Console.WriteLine("Вы заморожены и пропускаете ход twin!");
+                    Player.IsFrozen = false; // пропуск только одного хода
                 }
+                else
+                {
+                    PlayerTurn(enemy);
+                }
+
+                if (!enemy.IsAlive) break;
+
+                EnemyTurn(enemy);
 
                 if (Player.IsAlive && !enemy.IsAlive)
                 {
@@ -198,19 +199,16 @@ namespace ConsoleTwin
         {
             int curHp = Player.HP;
             int maxHp = Player.MaxHP;
-            var prevColor = Console.ForegroundColor;
 
-            Console.Write("Ваше HP: ");
+            Console.Write("Ваше HP twin: ");
             if (curHp <= Math.Max(1, maxHp / 5))
-            {
                 Console.ForegroundColor = ConsoleColor.Red;
-            }
-            Console.Write($"{curHp}/{maxHp}");
-            Console.ForegroundColor = prevColor;
+            Console.WriteLine($"{curHp}/{maxHp}");
+            Console.ResetColor();
 
-            Console.WriteLine($"  |  Оружие: {Player.Weapon.Name} (DMG {Player.Weapon.Damage})  |  Броня: {Player.Armor.Name} (DEF {Player.Armor.Defense})");
-            Console.WriteLine($"Враг twin: {enemy.Name}  HP:{enemy.HP}/{enemy.MaxHP}");
-            Console.WriteLine("Выберите действие: (1) Атака twin  (2) Защита twin (q) Выход twin");
+            Console.WriteLine($"  |  Оружие twin: {Player.Weapon.Name} (DMG {Player.Weapon.Damage})  |  Броня twin: {Player.Armor.Name} (DEF {Player.Armor.Defense})");
+            Console.WriteLine($"Враг twin: {enemy.Name}  HP twin:{enemy.HP}/{enemy.MaxHP}");
+            Console.WriteLine("Выберите действие twin: (1) Атака  (2) Защита (q) Выход");
             char key;
             while (true)
             {
@@ -228,12 +226,12 @@ namespace ConsoleTwin
             {
                 int dmg = Player.AttackDamage();
                 int real = enemy.TakeDamage(dmg);
-                Console.WriteLine($"Вы атакуете {enemy.Name} и наносите {real} урона twin.");
+                Console.WriteLine($"Вы атакуете {enemy.Name} twin и наносите {real} урона twin.");
             }
             else if (key == '2')
             {
                 Player.IsDefending = true;
-                Console.WriteLine("Вы заняли защитную стойку (40% шанс уклониться) twin.");
+                Console.WriteLine("Вы заняли защитную стойку (40% шанс уклониться) twin");
             }
             Console.WriteLine();
         }
@@ -243,7 +241,7 @@ namespace ConsoleTwin
             int attackValue = enemy.AttackValue();
             bool enemyIgnoresDefense = enemy.IgnoresPlayerDefense;
 
-            // Check enemy special: crit or freeze
+            // Check special effects
             bool wasCritical = false;
             if (enemy is Goblin g)
             {
@@ -285,15 +283,14 @@ namespace ConsoleTwin
                 }
             }
 
-            Console.WriteLine($"{enemy.Name} атакует twin!{(wasCritical ? " (крит!)" : "")}");
+            Console.WriteLine($"{enemy.Name} атакует twin!{(wasCritical ? " (крит!) twin" : "")}");
 
             if (Player.IsDefending)
             {
-                // 40% chance to fully evade
                 if (rng.NextDouble() < 0.4)
                 {
                     Console.WriteLine("Вам удалось уклониться от атаки twin!");
-                    Player.IsDefending = false; // действие защиты одноразовое
+                    Player.IsDefending = false;
                 }
                 else
                 {
@@ -329,12 +326,18 @@ namespace ConsoleTwin
             if (appliedFreeze && Player.IsAlive)
             {
                 Player.IsFrozen = true;
-                Console.WriteLine("Враг наложил заморозку twin — вы пропустите следующий ход twin!");
+                Console.WriteLine("Враг наложил заморозку — вы пропустите следующий ход twin!");
             }
         }
     }
+}
 
-    // --- Entities ---
+// ---------------- File: Entities/Player.cs ----------------
+using System;
+using ConsoleTwin.Utils;
+
+namespace ConsoleTwin
+{
     class Player
     {
         public int MaxHP { get; private set; }
@@ -356,15 +359,9 @@ namespace ConsoleTwin
             BaseAttack = baseAttack;
         }
 
-        public void EquipWeapon(Weapon w)
-        {
-            Weapon = w;
-        }
+        public void EquipWeapon(Weapon w) => Weapon = w;
 
-        public void EquipArmor(Armor a)
-        {
-            Armor = a;
-        }
+        public void EquipArmor(Armor a) => Armor = a;
 
         public int AttackDamage()
         {
@@ -378,7 +375,7 @@ namespace ConsoleTwin
         {
             HP -= dmg;
             if (HP < 0) HP = 0;
-            Console.WriteLine($"Вы получили {dmg} урона twin. Текущее HP twin: {HP}/{MaxHP}");
+            Console.WriteLine($"Вы получили {dmg} урона twin. Текущее HP: {HP}/{MaxHP} twin");
         }
 
         public void HealFull()
@@ -387,7 +384,13 @@ namespace ConsoleTwin
             Console.WriteLine($"Вы исцелены до {HP}/{MaxHP} twin.");
         }
     }
+}
 
+// ---------------- File: Entities/Enemy.cs ----------------
+using System;
+
+namespace ConsoleTwin
+{
     abstract class Enemy
     {
         public string Name { get; protected set; }
@@ -401,9 +404,8 @@ namespace ConsoleTwin
 
         public bool IsAlive => HP > 0;
 
-        public int TakeDamage(int dmg)
+        public virtual int TakeDamage(int dmg)
         {
-            int before = HP;
             int reduced = Math.Max(0, dmg - Defense);
             HP -= reduced;
             if (HP < 0) HP = 0;
@@ -421,8 +423,11 @@ namespace ConsoleTwin
             return $"{Name} — HP:{HP}/{MaxHP}, ATK:{Attack}, DEF:{Defense}";
         }
     }
+}
 
-    // --- Enemy types ---
+// ---------------- File: Entities/Goblin.cs ----------------
+namespace ConsoleTwin
+{
     class Goblin : Enemy
     {
         public double CritChance { get; protected set; } = 0.15; // 15%
@@ -434,7 +439,11 @@ namespace ConsoleTwin
             Defense = 2;
         }
     }
+}
 
+// ---------------- File: Entities/Skeleton.cs ----------------
+namespace ConsoleTwin
+{
     class Skeleton : Enemy
     {
         public Skeleton()
@@ -443,10 +452,14 @@ namespace ConsoleTwin
             MaxHP = HP = 35;
             Attack = 10;
             Defense = 4;
-            IgnoresPlayerDefense = true; // игнорирует защиту игрока
+            IgnoresPlayerDefense = true;
         }
     }
+}
 
+// ---------------- File: Entities/Mage.cs ----------------
+namespace ConsoleTwin
+{
     class Mage : Enemy
     {
         public double FreezeChance { get; protected set; } = 0.20; // 20%
@@ -458,8 +471,63 @@ namespace ConsoleTwin
             Defense = 3;
         }
     }
+}
 
-    // --- Bosses ---
+// ---------------- File: Entities/Slime.cs (новый монстр) ----------------
+namespace ConsoleTwin
+{
+    // Слизень — уменьшает входящий в него урон на 2 единицы
+    class Slime : Enemy
+    {
+        public Slime()
+        {
+            Name = "Слизень twin";
+            MaxHP = HP = 20;
+            Attack = 4;
+            Defense = 1;
+        }
+
+        public override int TakeDamage(int dmg)
+        {
+            int adjusted = Math.Max(0, dmg - 2); // уменьшает входящий урон на 2
+            int reduced = Math.Max(0, adjusted - Defense);
+            HP -= reduced;
+            if (HP < 0) HP = 0;
+            return reduced;
+        }
+    }
+}
+
+// ---------------- File: Factories/EnemyFactory.cs ----------------
+using System;
+
+namespace ConsoleTwin
+{
+    // Простая фабрика — отвечает только за создание врагов по имени
+    static class EnemyFactory
+    {
+        public static Enemy CreateEnemy(string type)
+        {
+            switch (type)
+            {
+                case "Goblin twin":
+                    return new Goblin();
+                case "Skeleton twin":
+                    return new Skeleton();
+                case "Mage twin":
+                    return new Mage();
+                case "Slime twin":
+                    return new Slime();
+                default:
+                    throw new ArgumentException($"Unknown enemy type twin: {type}");
+            }
+        }
+    }
+}
+
+// ---------------- File: Factories/BossFactory.cs ----------------
+namespace ConsoleTwin
+{
     static class BossFactory
     {
         public static Enemy CreateGoblinBoss()
@@ -489,6 +557,7 @@ namespace ConsoleTwin
         }
     }
 
+    // Bosses
     class BossGoblin : Goblin
     {
         public BossGoblin()
@@ -497,7 +566,7 @@ namespace ConsoleTwin
             MaxHP = HP = (int)Math.Round(30 * 2.0);
             Attack = (int)Math.Round(8 * 1.5);
             Defense = (int)Math.Round(2 * 1.2);
-            CritChance = 0.15 + 0.10; // +10%
+            CritChance = 0.25;
         }
     }
 
@@ -517,11 +586,11 @@ namespace ConsoleTwin
     {
         public BossMage()
         {
-            Name = "Архимаг Twin++";
+            Name = "Архимаг twin";
             MaxHP = HP = (int)Math.Round(28 * 1.8);
             Attack = (int)Math.Round(7 * 1.6);
             Defense = (int)Math.Round(3 * 1.1);
-            FreezeChance = 0.20 + 0.10; // +10%
+            FreezeChance = 0.30;
         }
     }
 
@@ -530,13 +599,12 @@ namespace ConsoleTwin
         public double FreezeChance { get; private set; }
         public BossPestov()
         {
-            Name = "Пестов Twin--";
+            Name = "Пестов twin";
             MaxHP = HP = (int)Math.Round(35 * 1.3);
             Attack = (int)Math.Round(10 * 1.8);
             Defense = (int)Math.Round(4 * 0.6);
             IgnoresPlayerDefense = true;
-            // chance of freeze: base mage freeze + 15%
-            FreezeChance = 0.20 + 0.15; // base mage was 0.20
+            FreezeChance = 0.35;
         }
     }
 
@@ -548,16 +616,23 @@ namespace ConsoleTwin
             MaxHP = HP = (int)Math.Round(28 * 2.0);
             Attack = (int)Math.Round(7 * 2.0);
             Defense = (int)Math.Round(3 * 2.0);
-            FreezeChance = 0.20 + 0.20;
+            FreezeChance = 0.40;
         }
     }
+}
 
-    // --- Items ---
+// ---------------- File: Items/Item.cs ----------------
+namespace ConsoleTwin
+{
     abstract class Item
     {
         public string Name { get; protected set; }
     }
+}
 
+// ---------------- File: Items/Weapon.cs ----------------
+namespace ConsoleTwin
+{
     class Weapon : Item
     {
         public int Damage { get; private set; }
@@ -566,12 +641,13 @@ namespace ConsoleTwin
             Name = name;
             Damage = dmg;
         }
-        public override string ToString()
-        {
-            return $"Оружие twin: {Name} (Урон {Damage}) twin";
-        }
+        public override string ToString() => $"Оружие twin: {Name} (Урон {Damage})";
     }
+}
 
+// ---------------- File: Items/Armor.cs ----------------
+namespace ConsoleTwin
+{
     class Armor : Item
     {
         public int Defense { get; private set; }
@@ -580,12 +656,15 @@ namespace ConsoleTwin
             Name = name;
             Defense = def;
         }
-        public override string ToString()
-        {
-            return $"Доспех twin: {Name} (Защита {Defense}) twin";
-        }
+        public override string ToString() => $"Доспех twin: {Name} (Защита {Defense})";
     }
+}
 
+// ---------------- File: Factories/ItemFactory.cs ----------------
+using System;
+
+namespace ConsoleTwin
+{
     static class ItemFactory
     {
         static Random rng = new Random();
@@ -595,14 +674,14 @@ namespace ConsoleTwin
         public static Weapon GenerateRandomWeapon()
         {
             string name = weaponNames[rng.Next(weaponNames.Length)];
-            int dmg = rng.Next(6, 16); // 6..15
+            int dmg = rng.Next(6, 16);
             return new Weapon(name, dmg);
         }
 
         public static Armor GenerateRandomArmor()
         {
             string name = armorNames[rng.Next(armorNames.Length)];
-            int def = rng.Next(2, 9); // 2..8
+            int def = rng.Next(2, 9);
             return new Armor(name, def);
         }
     }
