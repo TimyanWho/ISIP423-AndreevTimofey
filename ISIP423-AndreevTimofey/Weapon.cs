@@ -16,7 +16,7 @@ namespace ISIP423_AndreevTimofey
                 Name = name;
                 Damage = dmg;
             }
-            public override string ToString() => $"Оружие twin: {Name} (Урон {Damage})";
+            public override string ToString() => $"Оружие twin: {Name} (Урон {Damage}) twin";
         }
     }
 }
